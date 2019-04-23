@@ -10,24 +10,27 @@ import re                        # regular expression
 
 cfg = {
   'beaUrl'   : 'https://apps.bea.gov/',
-  'mainUrl'  : 'https://apps.bea.gov/histdata/',
-  'NIPAUrl'  : 'https://apps.bea.gov/histdata/histChildLevels.cfm?HMI=7',
+  'histUrl'  : 'https://apps.bea.gov/histdata/',
+  'NIPAHistUrl'  : 'https://apps.bea.gov/histdata/histChildLevels.cfm?HMI=7',
 }
 
 def NIPAHistTopTable( 
-    NIPAUrl  = 'https://apps.bea.gov/histdata/histChildLevels.cfm?HMI=7', #location of table of historical databases
-    mainUrl  = 'https://apps.bea.gov/histdata/'                           #missing part of the historical database https 
-  ):
+        NIPAHistUrl  = 'https://apps.bea.gov/histdata/histChildLevels.cfm?HMI=7', #location of table of historical databases
+        histUrl      = 'https://apps.bea.gov/histdata/',                          #missing part of the historical database https 
+        replaceSpaceWith = "%20"
+    ):
     '''
      Inputs:
        NIPAUrl a string poiting to the site of NIPA historical data.  For each quater, vintage, release data,
      it gives a link to the historical NIPA data (missing the mainUrl part)
      
+     replaceSpaceWith %20 is because certain pages will load open without this correction
+     
      Output:
        Returns a table listing the name, vintage, time units of the historical data and their http links 
     '''    
     #connect to main BEA Historical table and get tables
-    source = urllib.request.urlopen( NIPAUrl ).read()
+    source = urllib.request.urlopen( NIPAHistUrl ).read()
     soup = bs.BeautifulSoup( source, 'lxml' )
     htable = soup.table
     
@@ -47,37 +50,46 @@ def NIPAHistTopTable(
             links.append(aux.get('href'))
     
     dfNIPAHistTopTable['vintageLink'] = links
-    dfNIPAHistTopTable['vintageLink'] = dfNIPAHistTopTable['vintageLink'].apply( lambda x: mainUrl+x)  #appends the main url bc the link given misses this part
+    dfNIPAHistTopTable['vintageLink'] = dfNIPAHistTopTable['vintageLink'].apply( lambda x: (histUrl+x).replace(" ", replaceSpaceWith) )  #appends the main url bc the link given misses this part
     
     return( dfNIPAHistTopTable )
 
-def NIPAHistExcelLinks( dfline, beaUrl ):
-  '''
-     Given a line of the NIPAHistTopTable
-  '''
-  dataSpecs = dfline.to_dict('records')[0]  #get the first occurance of dfline (presumable a line already) 
+def NIPAHistDatabaseLinks( 
+          dataSpecs, 
+          beaUrl = 'https://apps.bea.gov/'      
+    ):
+    '''
+       A line of the NIPAHistTopTable points to a table of historical data (one for each section).  In some
+       cases it has a "main" and an "underlying" portions.  This function makes a table from each line 
+       with pointers to the http addresses of each individual table.       
+    '''  
+       
+    source = urllib.request.urlopen( dataSpecs['vintageLink'] ).read()
+    soup   = bs.BeautifulSoup( source, 'lxml' )
+    htable = soup.body.find_all('table')
+    
+    outValues = []
+    for table in htable: #this will skip tables that don't have headings
+      try: 
+        dftab =  pd.read_html( str(table) , header = 1 )[0]
+        auxlink = list( map( lambda x: x.get('href'), table.find_all('a') ))
+        #links.append( [auxlink] )
+        dftab['excelLink'] = list(map(lambda x: beaUrl+x ,auxlink))    #here replace " " with %20
+        if not dftab.empty:
+          for key in dataSpecs: 
+              dftab[key] = dataSpecs[key] 
+          outValues.append(dftab)
+      except:
+        pass
      
-  source = urllib.request.urlopen( dataSpecs['vintageLink'] ).read()
-  soup   = bs.BeautifulSoup( source, 'lxml' )
-  htable = soup.body.find_all('table')
-  
-  outValues = []
-  for table in htable: #this will skip tables that don't have headings
-    try: 
-      dftab =  pd.read_html( str(table) , header = 1 )[0]
-      auxlink = list( map( lambda x: x.get('href'), table.find_all('a') ))
-      #links.append( [auxlink] )
-      dftab['excelLink'] = list(map(lambda x: beaUrl+x,auxlink))
-      if not dftab.empty:
-        for key in dataSpecs: 
-            dftab[key] = dataSpecs[key] 
-        outValues.append(dftab)
-    except:
-      pass
-   
-  output = dict(zip( ['main','uderlying'], outValues ))
-  
-  return(output)
+    if len(outValues) == 3:      #Varies a lot, some years have three tables (main, FA / Millions, underlying, other years 1 (main)                                             
+      output = dict(zip( ['main','FAorMillions','underlying'], outValues ))
+    elif len(outValues) == 2:
+      output = dict(zip( ['main','underlying'], outValues ))
+    else:
+      output = dict(zip( ['main'], outValues ))
+    
+    return(output)
 
 
 def getHistTable( tableName, yearQuarter, vintage = "Third", timeUnit = "Q", cfg = cfg ):
@@ -128,7 +140,27 @@ def getHistTable( tableName, yearQuarter, vintage = "Third", timeUnit = "Q", cfg
 
 
 if __name__ == '__main__':
-    dfline.to_dict( )
     maindf = NIPAHistTopTable( cfg['NIPAUrl'], cfg['mainUrl'] )
-    dfline = maindf.loc[0]
-    out = NIPAHistExcelLinks( dfline, cfg['beaUrl'] )
+    dataSpecs = maindf.to_dict('records')[116]  #get the first occurance of dfline (presumable a line already) 
+    out = NIPAHistDatabaseLinks( dataSpecs )
+
+
+    #check which tables can be read:
+    for tab in range(len(maindf)):
+      try:
+        dataSpecs = maindf.to_dict('records')[tab]  #get the first occurance of dfline (presumable a line already) 
+        out = NIPAHistDatabaseLinks( dataSpecs )
+      except:
+        print(maindf.loc[tab])
+
+
+
+
+
+        try:
+          dataSpecs = maindf.to_dict('records')[tab]
+          dataSpecs['vintageLink'] = dataSpecs['vintageLink'].replace(' ','%20')
+          out = NIPAHistDatabaseLinks( dataSpecs )
+        except:  
+          print( maindf.loc[tab])
+          
