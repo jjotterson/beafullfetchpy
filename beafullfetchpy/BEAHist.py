@@ -95,7 +95,31 @@ def NIPAHistUrlOfQYVintageTypeSection(
     return(output)
 
 
-def getAllLinksToHistTables():
+def getAllLinksToHistTables(readSaved = False):
+    '''
+      Concatenate the tables of the excel data urls.
+
+      If readSaved = True, will read the pre-saved data
+    '''
+
+    if readSaved == True:
+      urlOfExcelTables = pd.read_json('beafullfetchpy/data/NIPAUrlofExcelData.json',orient="records")  #TODO: fix this, need to include Manifest.in
+      return( urlOfExcelTables )
+
+    dfUrlQYVintage = NIPAHistUrlOfQYVintage()
+    
+    urlOfExcelTables = pd.DataFrame()
+    for line in range(len(dfUrlQYVintage)):
+        LineOfdfUrlQYVintage = dfUrlQYVintage.to_dict('records')[line]
+        out = NIPAHistUrlOfQYVintageTypeSection( LineOfdfUrlQYVintage )
+        
+        for type in out:
+          out[type]['type'] = type
+        
+        urlOfExcelTables = pd.concat([urlOfExcelTables] + list(out.values()),sort=False)
+       
+    return( urlOfExcelTables )
+
 
 
 def getHistTable( tableName, yearQuarter, vintage = "Third", timeUnit = "Q", cfg = cfg ):
@@ -146,11 +170,11 @@ def getHistTable( tableName, yearQuarter, vintage = "Third", timeUnit = "Q", cfg
 
 
 if __name__ == '__main__':
-    maindf = NIPAHistTopTable( )
-    LineOfdfUrlQYVintage = maindf.to_dict('records')[116]  #get the first occurance of dfline (presumable a line already) 
-    out = NIPAHistDatabaseLinks( LineOfdfUrlQYVintage )
+    dfUrlQYVintage = NIPAHistUrlOfQYVintage()
+    LineOfdfUrlQYVintage = dfUrlQYVintage.to_dict('records')[line]
+    out = NIPAHistUrlOfQYVintageTypeSection( LineOfdfUrlQYVintage )
 
-
+    excelTables = getAllLinksToHistTables()
     #check which tables can be read:
     for tab in range(len(maindf)):
       try:
@@ -158,8 +182,3 @@ if __name__ == '__main__':
         out = NIPAHistDatabaseLinks( LineOfdfUrlQYVintage )
       except:
         print(maindf.loc[tab])
-
-
-
-
-          
