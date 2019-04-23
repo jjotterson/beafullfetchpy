@@ -14,12 +14,17 @@ cfg = {
   'NIPAUrl'  : 'https://apps.bea.gov/histdata/histChildLevels.cfm?HMI=7',
 }
 
-def NIPAHistMain( NIPAUrl, mainUrl ):
+def NIPAHistTopTable( 
+    NIPAUrl  = 'https://apps.bea.gov/histdata/histChildLevels.cfm?HMI=7', #location of table of historical databases
+    mainUrl  = 'https://apps.bea.gov/histdata/'                           #missing part of the historical database https 
+  ):
     '''
-     NIPAUrl a string poiting to the site of NIPA historical data.  For each quater, vintage, release data, it has a link to the historical NIPA data
-     mainUrl the URL of the BEA historical data site.
+     Inputs:
+       NIPAUrl a string poiting to the site of NIPA historical data.  For each quater, vintage, release data,
+     it gives a link to the historical NIPA data (missing the mainUrl part)
      
-     Returns a df with of all quarter, vintage, release data, link
+     Output:
+       Returns a table listing the name, vintage, time units of the historical data and their http links 
     '''    
     #connect to main BEA Historical table and get tables
     source = urllib.request.urlopen( NIPAUrl ).read()
@@ -27,11 +32,11 @@ def NIPAHistMain( NIPAUrl, mainUrl ):
     htable = soup.table
     
     #get the main table and standardize its entries ('1. Advance' vs 'Advance' in lines etc)
-    dfMain = pd.read_html( str( htable ), header = 1)[1]  #get the table entries, could go to the html directly.
-    dfMain.columns = ['yearQuarter','vintage','releaseDate']
-    dfMain['vintage'] = dfMain['vintage'].apply( lambda x: re.sub('.\. ','',x) )  
-    dfMain['vintage'] = dfMain['vintage'].apply( lambda x: re.sub('Final','Third',x) )
-    dfMain['vintage'] = dfMain['vintage'].apply( lambda x: re.sub('Preliminary','Second',x) )
+    dfNIPAHistTopTable = pd.read_html( str( htable ), header = 1)[1]  #get the table entries, could go to the html directly.
+    dfNIPAHistTopTable.columns = ['yearQuarter','vintage','releaseDate']
+    dfNIPAHistTopTable['vintage'] = dfNIPAHistTopTable['vintage'].apply( lambda x: re.sub('.\. ','',x) )  
+    dfNIPAHistTopTable['vintage'] = dfNIPAHistTopTable['vintage'].apply( lambda x: re.sub('Final','Third',x) )
+    dfNIPAHistTopTable['vintage'] = dfNIPAHistTopTable['vintage'].apply( lambda x: re.sub('Preliminary','Second',x) )
     
     #get hrefs from the loaded table
     links = []
@@ -41,13 +46,15 @@ def NIPAHistMain( NIPAUrl, mainUrl ):
         if aux != None:
             links.append(aux.get('href'))
     
-    dfMain['vintageLink'] = links
-    dfMain['vintageLink'] = dfMain['vintageLink'].apply( lambda x: mainUrl+x)  #appends the main url bc the link given misses this part
+    dfNIPAHistTopTable['vintageLink'] = links
+    dfNIPAHistTopTable['vintageLink'] = dfNIPAHistTopTable['vintageLink'].apply( lambda x: mainUrl+x)  #appends the main url bc the link given misses this part
     
-    return( dfMain )
+    return( dfNIPAHistTopTable )
 
 def NIPAHistExcelLinks( dfline, beaUrl ):
-  
+  '''
+     Given a line of the NIPAHistTopTable
+  '''
   dataSpecs = dfline.to_dict('records')[0]  #get the first occurance of dfline (presumable a line already) 
      
   source = urllib.request.urlopen( dataSpecs['vintageLink'] ).read()
@@ -73,16 +80,10 @@ def NIPAHistExcelLinks( dfline, beaUrl ):
   return(output)
 
 
-maindf = NIPAHistMain( cfg['NIPAUrl'], cfg['mainUrl'] )
-dfline = maindf.loc[0]
-out = NIPAHistExcelLinks( dfline, cfg['beaUrl'] )
-
-
-
 def getHistTable( tableName, yearQuarter, vintage = "Third", timeUnit = "Q", cfg = cfg ):
   sectionNum = tableName[1]
   r = re.compile( tableName.replace('T','') + '.*' + timeUnit )  #will search for sheet names with this regex.
-  maindf  = NIPAHistMain( cfg['NIPAUrl'], cfg['mainUrl'] )
+  maindf  = NIPAHistTopTable( cfg['NIPAUrl'], cfg['mainUrl'] )
   dfline  = maindf[ (maindf.yearQuarter == yearQuarter) & (maindf.vintage == vintage) ]
   excelLinks = NIPAHistExcelLinks( dfline , cfg['beaUrl'] )['main']
   dfExcelSelected = excelLinks[ excelLinks.Title.str.contains('Section {}'.format(sectionNum)) ]
@@ -125,4 +126,9 @@ def getHistTable( tableName, yearQuarter, vintage = "Third", timeUnit = "Q", cfg
   datetime.timedelta( month = 1 )
 
 
-dfline.to_dict( )
+
+if __name__ == '__main__':
+    dfline.to_dict( )
+    maindf = NIPAHistTopTable( cfg['NIPAUrl'], cfg['mainUrl'] )
+    dfline = maindf.loc[0]
+    out = NIPAHistExcelLinks( dfline, cfg['beaUrl'] )
