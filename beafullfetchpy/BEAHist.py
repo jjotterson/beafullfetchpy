@@ -14,12 +14,14 @@ cfg = {
   'NIPAHistUrl'  : 'https://apps.bea.gov/histdata/histChildLevels.cfm?HMI=7',
 }
 
-def NIPAHistTopTable( 
+def NIPAHistUrlOfQYVintage( 
         NIPAHistUrl  = 'https://apps.bea.gov/histdata/histChildLevels.cfm?HMI=7', #location of table of historical databases
         histUrl      = 'https://apps.bea.gov/histdata/',                          #missing part of the historical database https 
         replaceSpaceWith = "%20"
     ):
     '''
+     Table of the url of the Quarter Year Vintage Data
+
      Inputs:
        NIPAUrl a string poiting to the site of NIPA historical data.  For each quater, vintage, release data,
      it gives a link to the historical NIPA data (missing the mainUrl part)
@@ -28,6 +30,7 @@ def NIPAHistTopTable(
      
      Output:
        Returns a table listing the name, vintage, time units of the historical data and their http links 
+       These are not links to data, but a place that points to excel tables (the output of interest).
     '''    
     #connect to main BEA Historical table and get tables
     source = urllib.request.urlopen( NIPAHistUrl ).read()
@@ -35,11 +38,11 @@ def NIPAHistTopTable(
     htable = soup.table
     
     #get the main table and standardize its entries ('1. Advance' vs 'Advance' in lines etc)
-    dfNIPAHistTopTable = pd.read_html( str( htable ), header = 1)[1]  #get the table entries, could go to the html directly.
-    dfNIPAHistTopTable.columns = ['yearQuarter','vintage','releaseDate']
-    dfNIPAHistTopTable['vintage'] = dfNIPAHistTopTable['vintage'].apply( lambda x: re.sub('.\. ','',x) )  
-    dfNIPAHistTopTable['vintage'] = dfNIPAHistTopTable['vintage'].apply( lambda x: re.sub('Final','Third',x) )
-    dfNIPAHistTopTable['vintage'] = dfNIPAHistTopTable['vintage'].apply( lambda x: re.sub('Preliminary','Second',x) )
+    dfUrlQYVintage = pd.read_html( str( htable ), header = 1)[1]  #get the table entries, could go to the html directly.
+    dfUrlQYVintage.columns = ['yearQuarter','vintage','releaseDate']
+    dfUrlQYVintage['vintage'] = dfUrlQYVintage['vintage'].apply( lambda x: re.sub('.\. ','',x) )  
+    dfUrlQYVintage['vintage'] = dfUrlQYVintage['vintage'].apply( lambda x: re.sub('Final','Third',x) )
+    dfUrlQYVintage['vintage'] = dfUrlQYVintage['vintage'].apply( lambda x: re.sub('Preliminary','Second',x) )
     
     #get hrefs from the loaded table
     links = []
@@ -49,22 +52,22 @@ def NIPAHistTopTable(
         if aux != None:
             links.append(aux.get('href'))
     
-    dfNIPAHistTopTable['vintageLink'] = links
-    dfNIPAHistTopTable['vintageLink'] = dfNIPAHistTopTable['vintageLink'].apply( lambda x: (histUrl+x).replace(" ", replaceSpaceWith) )  #appends the main url bc the link given misses this part
+    dfUrlQYVintage['vintageLink'] = links
+    dfUrlQYVintage['vintageLink'] = dfUrlQYVintage['vintageLink'].apply( lambda x: (histUrl+x).replace(" ", replaceSpaceWith) )  #appends the main url bc the link given misses this part
     
-    return( dfNIPAHistTopTable )
+    return( dfUrlQYVintage )
 
-def NIPAHistDatabaseLinks( 
-          dataSpecs, 
+def NIPAHistUrlOfQYVintageTypeSection( 
+          LineOfdfUrlQYVintage,                    #a line of the table output of  NIPAHistUrlOfQYVintage
           beaUrl = 'https://apps.bea.gov/'      
     ):
     '''
-       A line of the NIPAHistTopTable points to a table of historical data (one for each section).  In some
-       cases it has a "main" and an "underlying" portions.  This function makes a table from each line 
-       with pointers to the http addresses of each individual table.       
+       From the url of quarter year vintage data (see NIPAHistUrlOfQYVintage) make a table of the url of the 
+        quarter year vintage type (main/underlying etc) and section
+       The output urls point to excel tables.        
     '''  
        
-    source = urllib.request.urlopen( dataSpecs['vintageLink'] ).read()
+    source = urllib.request.urlopen( LineOfdfUrlQYVintage['vintageLink'] ).read()
     soup   = bs.BeautifulSoup( source, 'lxml' )
     htable = soup.body.find_all('table')
     
@@ -76,8 +79,8 @@ def NIPAHistDatabaseLinks(
         #links.append( [auxlink] )
         dftab['excelLink'] = list(map(lambda x: beaUrl+x ,auxlink))    #here replace " " with %20
         if not dftab.empty:
-          for key in dataSpecs: 
-              dftab[key] = dataSpecs[key] 
+          for key in LineOfdfUrlQYVintage: 
+              dftab[key] = LineOfdfUrlQYVintage[key] 
           outValues.append(dftab)
       except:
         pass
@@ -90,6 +93,9 @@ def NIPAHistDatabaseLinks(
       output = dict(zip( ['main'], outValues ))
     
     return(output)
+
+
+def getAllLinksToHistTables():
 
 
 def getHistTable( tableName, yearQuarter, vintage = "Third", timeUnit = "Q", cfg = cfg ):
@@ -140,27 +146,20 @@ def getHistTable( tableName, yearQuarter, vintage = "Third", timeUnit = "Q", cfg
 
 
 if __name__ == '__main__':
-    maindf = NIPAHistTopTable( cfg['NIPAUrl'], cfg['mainUrl'] )
-    dataSpecs = maindf.to_dict('records')[116]  #get the first occurance of dfline (presumable a line already) 
-    out = NIPAHistDatabaseLinks( dataSpecs )
+    maindf = NIPAHistTopTable( )
+    LineOfdfUrlQYVintage = maindf.to_dict('records')[116]  #get the first occurance of dfline (presumable a line already) 
+    out = NIPAHistDatabaseLinks( LineOfdfUrlQYVintage )
 
 
     #check which tables can be read:
     for tab in range(len(maindf)):
       try:
-        dataSpecs = maindf.to_dict('records')[tab]  #get the first occurance of dfline (presumable a line already) 
-        out = NIPAHistDatabaseLinks( dataSpecs )
+        LineOfdfUrlQYVintage = maindf.to_dict('records')[tab]  #get the first occurance of dfline (presumable a line already) 
+        out = NIPAHistDatabaseLinks( LineOfdfUrlQYVintage )
       except:
         print(maindf.loc[tab])
 
 
 
 
-
-        try:
-          dataSpecs = maindf.to_dict('records')[tab]
-          dataSpecs['vintageLink'] = dataSpecs['vintageLink'].replace(' ','%20')
-          out = NIPAHistDatabaseLinks( dataSpecs )
-        except:  
-          print( maindf.loc[tab])
           
