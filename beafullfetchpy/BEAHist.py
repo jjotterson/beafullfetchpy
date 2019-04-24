@@ -43,6 +43,7 @@ def NIPAHistUrlOfQYVintage(
     dfUrlQYVintage['vintage'] = dfUrlQYVintage['vintage'].apply( lambda x: re.sub('.\. ','',x) )  
     dfUrlQYVintage['vintage'] = dfUrlQYVintage['vintage'].apply( lambda x: re.sub('Final','Third',x) )
     dfUrlQYVintage['vintage'] = dfUrlQYVintage['vintage'].apply( lambda x: re.sub('Preliminary','Second',x) )
+    dfUrlQYVintage['vintage'] = dfUrlQYVintage['vintage'].apply( lambda x: re.sub('Initial','Advance',x) )
     
     #get hrefs from the loaded table
     links = []
@@ -101,9 +102,9 @@ def getAllLinksToHistTables(readSaved = False):
 
       If readSaved = True, will read the pre-saved data
     '''
-
+    
     if readSaved == True:
-      urlOfExcelTables = pd.read_json('beafullfetchpy/data/NIPAUrlofExcelData.json',orient="records")  #TODO: fix this, need to include Manifest.in
+      urlOfExcelTables = pd.read_json('/beafullfetchpy/data/NIPAUrlofExcelData.json',orient="records")  #TODO: fix this, need to include Manifest.in
       return( urlOfExcelTables )
 
     dfUrlQYVintage = NIPAHistUrlOfQYVintage()
@@ -120,49 +121,52 @@ def getAllLinksToHistTables(readSaved = False):
        
     return( urlOfExcelTables )
 
-
+def getSectionTableLink( section, yearQuarter, vintage):  
+    '''
+      
+    '''
 
 def getHistTable( tableName, yearQuarter, vintage = "Third", timeUnit = "Q", cfg = cfg ):
-  sectionNum = tableName[1]
-  r = re.compile( tableName.replace('T','') + '.*' + timeUnit )  #will search for sheet names with this regex.
-  maindf  = NIPAHistTopTable( cfg['NIPAUrl'], cfg['mainUrl'] )
-  dfline  = maindf[ (maindf.yearQuarter == yearQuarter) & (maindf.vintage == vintage) ]
-  excelLinks = NIPAHistExcelLinks( dfline , cfg['beaUrl'] )['main']
-  dfExcelSelected = excelLinks[ excelLinks.Title.str.contains('Section {}'.format(sectionNum)) ]
-  
-  output = pd.DataFrame()
-  if dfExcelSelected.empty:
-     print("Table does not exist in time period!")
-     return( output )
-  
-  #for now, will only get the Section x data, not the Section x (Pre) (pre 1969) that might exist
-  #to do: when (pre) exist open and concatenate it.
-  exLink = excelLinks[ excelLinks.Title == 'Section {}'.format(sectionNum) ].excelLink.tolist()[0]
-  excelAll = pd.read_excel( exLink, None)  #get all tables
-  
-  table = excelAll[ list( filter( r.match, excelAll.keys()) )[0] ]
-  
-  #get metadata (date range for now):
-  #r2 = re.compile('.* data from .* To .*'.lower())
-  #vv = table.iloc[:,0].astype(str).str.lower().tolist()
-  #dates = list( filter( lambda x: r2.match(x), vv  ) )[0]
-  
-  #clean up the table.
-  table = table[ table.iloc[:,2].notna() ].iloc[:,2:]
-  table = table.rename(columns={ table.columns[0]: 'variable' }).set_index('variable')
-  table = table.apply(pd.to_numeric, errors='coerce')
-  table = table.dropna( how = 'all' ) 
-  
-  #put dates
-  Nobs = table.shape[1]
-  if timeUnit == 'Q':
-    ffreq = 'QS' #else will end a quarter before...
-  
-  dateRange = list( pd.date_range(end=yearQuarter.replace(', ',''), periods=Nobs,freq=ffreq ) )
-  dates = pd.PeriodIndex( dateRange, freq = timeUnit)
-  
-  table.columns = dates
-  return(table)
+    sectionNum = tableName[1]
+    r = re.compile( tableName.replace('T','') + '.*' + timeUnit )  #will search for sheet names with this regex.
+    maindf  = NIPAHistUrlOfQYVintage( cfg['NIPAHistUrl'], cfg['histUrl'] )
+    dfline  = maindf[ (maindf.yearQuarter == yearQuarter) & (maindf.vintage == vintage) ]
+    excelLinks = NIPAHistExcelLinks( dfline , cfg['beaUrl'] )['main']
+    dfExcelSelected = excelLinks[ excelLinks.Title.str.contains('Section {}'.format(sectionNum)) ]
+    
+    output = pd.DataFrame()
+    if dfExcelSelected.empty:
+       print("Table does not exist in time period!")
+       return( output )
+    
+    #for now, will only get the Section x data, not the Section x (Pre) (pre 1969) that might exist
+    #to do: when (pre) exist open and concatenate it.
+    exLink = excelLinks[ excelLinks.Title == 'Section {}'.format(sectionNum) ].excelLink.tolist()[0]
+    excelAll = pd.read_excel( exLink, None)  #get all tables
+    
+    table = excelAll[ list( filter( r.match, excelAll.keys()) )[0] ]
+    
+    #get metadata (date range for now):
+    #r2 = re.compile('.* data from .* To .*'.lower())
+    #vv = table.iloc[:,0].astype(str).str.lower().tolist()
+    #dates = list( filter( lambda x: r2.match(x), vv  ) )[0]
+    
+    #clean up the table.
+    table = table[ table.iloc[:,2].notna() ].iloc[:,2:]
+    table = table.rename(columns={ table.columns[0]: 'variable' }).set_index('variable')
+    table = table.apply(pd.to_numeric, errors='coerce')
+    table = table.dropna( how = 'all' ) 
+    
+    #put dates
+    Nobs = table.shape[1]
+    if timeUnit == 'Q':
+      ffreq = 'QS' #else will end a quarter before...
+    
+    dateRange = list( pd.date_range(end=yearQuarter.replace(', ',''), periods=Nobs,freq=ffreq ) )
+    dates = pd.PeriodIndex( dateRange, freq = timeUnit)
+    
+    table.columns = dates
+    return(table)
 
 
   datetime.timedelta( month = 1 )
@@ -182,3 +186,4 @@ if __name__ == '__main__':
         out = NIPAHistDatabaseLinks( LineOfdfUrlQYVintage )
       except:
         print(maindf.loc[tab])
+ 
