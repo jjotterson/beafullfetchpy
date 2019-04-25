@@ -49,8 +49,7 @@ def NIPAHistUrlOfQYVintage(
     links = []
     for link in htable.table.find_all('tr'):
         #links.append(link)
-        aux = link.a
-        if aux != None:
+        aux = link.a        if aux != None:
             links.append(aux.get('href'))
     
     dfUrlQYVintage['vintageLink'] = links
@@ -104,7 +103,7 @@ def getAllLinksToHistTables(readSaved = False):
     '''
     
     if readSaved == True:
-      urlOfExcelTables = pd.read_json('/beafullfetchpy/data/NIPAUrlofExcelData.json',orient="records")  #TODO: fix this, need to include Manifest.in
+      urlOfExcelTables = pd.read_json('/Users/jjotterson/Dropbox/Projects/PythonPackages/beafullfetchpy/beafullfetchpy/data/NIPAUrlofExcelHistData.json',orient="records")  #TODO: fix this, need to include Manifest.in
       return( urlOfExcelTables )
 
     dfUrlQYVintage = NIPAHistUrlOfQYVintage()
@@ -169,7 +168,7 @@ def getHistTable( tableName, yearQuarter, vintage = "Third", timeUnit = "Q", cfg
     return(table)
 
 
-  datetime.timedelta( month = 1 )
+#  datetime.timedelta( month = 1 )
 
 
 
@@ -179,11 +178,10 @@ if __name__ == '__main__':
     out = NIPAHistUrlOfQYVintageTypeSection( LineOfdfUrlQYVintage )
 
     excelTables = getAllLinksToHistTables()
-    #check which tables can be read:
-    for tab in range(len(maindf)):
-      try:
-        LineOfdfUrlQYVintage = maindf.to_dict('records')[tab]  #get the first occurance of dfline (presumable a line already) 
-        out = NIPAHistDatabaseLinks( LineOfdfUrlQYVintage )
-      except:
-        print(maindf.loc[tab])
- 
+    excelTables = excelTables[['index', 'yearQuarter', 'vintage', 'Title', 'Details', 'type', 'releaseDate', 'vintageLink', 'excelLink']]
+    excelTables.to_json('data/NIPAUrlofExcelHistData.json',orient="records")  #todo: fix this file pointer.
+
+    excelTables = getAllLinksToHistTables(readSaved=True)
+
+
+pd.read_excel( excelTables['excelLink'].loc[1], sheetname= None)

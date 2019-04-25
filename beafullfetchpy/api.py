@@ -22,16 +22,16 @@ def NIPA(
     outputFormat="tablePretty",
     beaHttp='https://apps.bea.gov/api/data/',
     tryFrequencies=False
-):
+   ):
     '''
       User only need to specify the NIPA tableName, other parameters are defined by default.  Year (set to X) and Frequency (set to Q)
       can be redefined with payload = {Year = 1990, Frequency = 'A'}, for example.
-
+      
       payload - will override the default
-
+      
       outputFormat - table, tablePretty will return tables (the latter separates the metadata and pivots the table to index x time).
                      Else, returns the JSON, XML.
-
+      
       beaHttp - the addess of the BEA API
     '''
     # TODO: put the payload ={} all data in lowercase, else may repeat the load (say frequency=A and Frquency = Q will load A and Q)
@@ -65,3 +65,5 @@ def NIPA(
 
 
 
+if __name__ == '__main__':
+    print(NIPA('T10101'))
