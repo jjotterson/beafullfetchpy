@@ -107,3 +107,12 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+beafullfetchpy/beaHist1500.py
+beafullfetchpy/beaHist2000.py
+beafullfetchpy/beaHist2500.py
+beafullfetchpy/beaHist3000.py
+beafullfetchpy/beaHist4000.py
+beafullfetchpy/beaHist4424.py
+beafullfetchpy/beaHist500.py
+beafullfetchpy/beaHist1000.py
+beafullfetchpy/beaHist1000.py

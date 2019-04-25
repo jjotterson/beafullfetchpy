@@ -49,7 +49,8 @@ def NIPAHistUrlOfQYVintage(
     links = []
     for link in htable.table.find_all('tr'):
         #links.append(link)
-        aux = link.a        if aux != None:
+        aux = link.a        
+        if aux != None:
             links.append(aux.get('href'))
     
     dfUrlQYVintage['vintageLink'] = links
@@ -103,9 +104,9 @@ def getAllLinksToHistTables(readSaved = False):
     '''
     
     if readSaved == True:
-      urlOfExcelTables = pd.read_json('/Users/jjotterson/Dropbox/Projects/PythonPackages/beafullfetchpy/beafullfetchpy/data/NIPAUrlofExcelHistData.json',orient="records")  #TODO: fix this, need to include Manifest.in
+      urlOfExcelTables = pd.read_json('U:/Projects/outside/beafullfetchpy/beafullfetchpy/data/NIPAUrlofExcelHistData.json',orient="records")  #TODO: fix this, need to include Manifest.in
       return( urlOfExcelTables )
-
+     
     dfUrlQYVintage = NIPAHistUrlOfQYVintage()
     
     urlOfExcelTables = pd.DataFrame()
@@ -125,12 +126,28 @@ def getNIPADataFromListofLinks( tableOfLinks , asJson = False):
       
     '''
     nipaData = tableOfLinks.to_dict(orient='records')
+    count = 0 
     for row in nipaData:
+        link = row['excelLink']
         if asJson == False:
-            row['data'] = pd.read_excel(link, sheetname=None)
+            try:
+                row['data'] = pd.read_excel(link.replace(" ","%20"), sheet_name=None)
+            except:
+                try:
+                    row['data'] = pd.read_excel(link.replace(" ","%20"), sheet_name=None) 
+                except:   
+                    print("cannot read: " + link)
         else:
-            row['data'] = pd.read_excel(link, sheetname=None).to_json(orient='records')
-
+            try:
+                row['data'] = pd.read_excel(link.replace(" ","%20"), sheet_name=None).to_dict(orient='records')
+            except:
+                try: 
+                    row['data'] = pd.read_excel(link.replace(" ","%20"), sheet_name=None).to_dict(orient='records')
+                except:
+                    print('cannot read: ' + link)
+        count = count + 1    
+        if count%250 == 0:
+          print( 'got item '+ str(count) )
     return( nipaData )
 
 def getHistTable( tableName, yearQuarter, vintage = "Third", timeUnit = "Q", cfg = cfg ):
@@ -178,21 +195,51 @@ def getHistTable( tableName, yearQuarter, vintage = "Third", timeUnit = "Q", cfg
 
 #  datetime.timedelta( month = 1 )
 
+def getAndSaveData(range,filename,excelTables):
+    tableRange = excelTables.iloc[range]
+    
+    fullnipaData = getNIPADataFromListofLinks(tableRange)
 
+    serialized = pickle.dumps(fullnipaData)
+        
+    with open(filename,'wb') as file_object:
+        file_object.write(serialized)
+
+    print( "finished loading!")
+    print(range)
 
 if __name__ == '__main__':
-    dfUrlQYVintage = NIPAHistUrlOfQYVintage()
-    LineOfdfUrlQYVintage = dfUrlQYVintage.to_dict('records')[line]
-    out = NIPAHistUrlOfQYVintageTypeSection( LineOfdfUrlQYVintage )
-
-    excelTables = getAllLinksToHistTables()
-    excelTables = excelTables[['index', 'yearQuarter', 'vintage', 'Title', 'Details', 'type', 'releaseDate', 'vintageLink', 'excelLink']]
-    excelTables.to_json('data/NIPAUrlofExcelHistData.json',orient="records")  #todo: fix this file pointer.
-
+    #dfUrlQYVintage = NIPAHistUrlOfQYVintage()
+    #LineOfdfUrlQYVintage = dfUrlQYVintage.to_dict('records')[line]
+    #out = NIPAHistUrlOfQYVintageTypeSection( LineOfdfUrlQYVintage )
+    #
+    #excelTables = getAllLinksToHistTables()
+    #excelTables = excelTables[['index', 'yearQuarter', 'vintage', 'Title', 'Details', 'type', 'releaseDate', 'vintageLink', 'excelLink']]
+    #excelTables.to_json('data/NIPAUrlofExcelHistData.json',orient="records")  #todo: fix this file pointer.
     excelTables = getAllLinksToHistTables(readSaved=True)
+    import sys
+    import pickle
 
-    fullnipaData = getNIPADataFromListofLinks(excelTables)
+    rr = range( int(sys.argv[1]), int(sys.argv[2]) )
+    filename = sys.argv[3]
+    getAndSaveData(rr,filename,excelTables)
 
+    
+    #fullnipaData = getNIPADataFromListofLinks(excelTables)
+    #
+    #
+    #import pickle 
+    #serialized = pickle.dumps(fullnipaData)
+    #filename = 'serialized.native'
+    #
+    #with open(filename,'wb') as file_object:
+    #    file_object.write(serialized)
+    #
+    #
+    #with open(filename,'rb') as file_object:
+    #    raw_data = file_object.read()
+    #
+    #
+    #deserialized = pickle.loads(raw_data)
 
-
-pd.read_excel( excelTables['excelLink'].loc[1], sheetname= None)
+    
