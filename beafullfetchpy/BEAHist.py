@@ -120,10 +120,18 @@ def getAllLinksToHistTables(readSaved = False):
        
     return( urlOfExcelTables )
 
-def getSectionTableLink( section, yearQuarter, vintage):  
+def getNIPADataFromListofLinks( tableOfLinks , asJson = False):
     '''
       
     '''
+    nipaData = tableOfLinks.to_dict(orient='records')
+    for row in nipaData:
+        if asJson == False:
+            row['data'] = pd.read_excel(link, sheetname=None)
+        else:
+            row['data'] = pd.read_excel(link, sheetname=None).to_json(orient='records')
+
+    return( nipaData )
 
 def getHistTable( tableName, yearQuarter, vintage = "Third", timeUnit = "Q", cfg = cfg ):
     sectionNum = tableName[1]
@@ -182,6 +190,9 @@ if __name__ == '__main__':
     excelTables.to_json('data/NIPAUrlofExcelHistData.json',orient="records")  #todo: fix this file pointer.
 
     excelTables = getAllLinksToHistTables(readSaved=True)
+
+    fullnipaData = getNIPADataFromListofLinks(excelTables)
+
 
 
 pd.read_excel( excelTables['excelLink'].loc[1], sheetname= None)
