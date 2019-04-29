@@ -1,4 +1,4 @@
-import pandas as pd              # 
+import pandas as pd              #
 import numpy as np               # 
 import requests as rq            # get json
 import bs4 as bs                 # scraping websites
@@ -104,7 +104,7 @@ def getAllLinksToHistTables(readSaved = False):
     '''
     
     if readSaved == True:
-      urlOfExcelTables = pd.read_json('U:/Projects/outside/beafullfetchpy/beafullfetchpy/data/NIPAUrlofExcelHistData.json',orient="records")  #TODO: fix this, need to include Manifest.in
+      urlOfExcelTables = pd.read_json('/Users/jjotterson/Dropbox/Projects/PythonPackages/beafullfetchpy/beafullfetchpy/data/NIPAUrlofExcelHistData.json',orient="records")  #TODO: fix this, need to include Manifest.in
       return( urlOfExcelTables )
      
     dfUrlQYVintage = NIPAHistUrlOfQYVintage()
@@ -195,7 +195,7 @@ def getHistTable( tableName, yearQuarter, vintage = "Third", timeUnit = "Q", cfg
 
 #  datetime.timedelta( month = 1 )
 
-def getAndSaveData(range,filename,excelTables):
+def getAndSaveData(range,filename,excelTables, quiet = True):
     tableRange = excelTables.iloc[range]
     
     fullnipaData = getNIPADataFromListofLinks(tableRange)
@@ -205,8 +205,11 @@ def getAndSaveData(range,filename,excelTables):
     with open(filename,'wb') as file_object:
         file_object.write(serialized)
 
-    print( "finished loading!")
-    print(range)
+    if quiet == False:
+        print( "finished loading!")
+        print(range)
+
+def formatBeaRaw( beaHistRaw )
 
 if __name__ == '__main__':
     #dfUrlQYVintage = NIPAHistUrlOfQYVintage()
@@ -220,9 +223,20 @@ if __name__ == '__main__':
     import sys
     import pickle
 
-    rr = range( int(sys.argv[1]), int(sys.argv[2]) )
-    filename = sys.argv[3]
-    getAndSaveData(rr,filename,excelTables)
+
+
+    for i in range(int(sys.argv[1]),int(sys.argv[1])+1000):
+        rr = range( i, i+1 )
+        filename = 'beafullfetchpy/beaData/beaHist' + str(i)
+        getAndSaveData(rr, filename, excelTables)
+        i = i + 1
+        if i % 100 == 1:
+            print( i )
+
+
+    #rr = range( int(sys.argv[1]), int(sys.argv[2]) )
+    #filename = sys.argv[3]
+    #getAndSaveData(rr,filename,excelTables)
 
     
     #fullnipaData = getNIPADataFromListofLinks(excelTables)
@@ -236,10 +250,44 @@ if __name__ == '__main__':
     #    file_object.write(serialized)
     #
     #
-    #with open(filename,'rb') as file_object:
-    #    raw_data = file_object.read()
-    #
-    #
-    #deserialized = pickle.loads(raw_data)
+    filename = 'beafullfetchpy/beaData/beaHist1'
+    with open(filename,'rb') as file_object:
+        raw_data = file_object.read()
 
-    
+
+    beaHistRaw = pickle.loads(raw_data)
+
+
+
+raw = beaHistRaw[0]['data']
+formatedData = []
+for x in raw:
+
+    # Data
+    if x not 'Contents':
+      Results = {}
+      table = raw[x]
+      #
+      Results['Notes'] = {
+          'NoteRef': x,
+          'NoteText': " - ".join( [table.columns[0]] + table.iloc[:5,0].to_list() )
+      }
+      #main data and footnote comments
+      dataTab = table.iloc[7:]  # todo: check when quarters are indicated in the next line
+      #column names
+      colNames = table.iloc[6].to_list()
+      colNames[1] = 'LineDescription'
+      colNames[2] = 'SeriesCode'
+      dataTab.columns = colNames
+      dataTab.reset_index(drop=True,inplace=True)
+
+      #serpate main and comments, get meta:
+      footnotes = dataTab.loc[dataTab['LineDescription'].isnull() & dataTab['Line'].notnull()].iloc[:, 0].to_list()
+      Results['Notes']['Footnotes'] = dict(zip(range(1,1+len(footnotes)),footnotes))
+
+      dataTab = dataTab.loc[dataTab['LineDescription'].notnull()]
+      #metadata
+      dataTabne"].loc[dataTab['Line'].isnull()] = dataTab['Line'].ffill().loc[dataTab['Line'].isnull()] + .01
+
+
+vv.index(
