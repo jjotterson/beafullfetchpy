@@ -4,6 +4,7 @@ import requests as rq            # get json
 import bs4 as bs                 # scraping websites
 import urllib.request            # work/connect to url    
 import re                        # regular expression
+import json
 #import datetime
 #from CFGBeaHist import *        # get basic config.
 
@@ -104,7 +105,7 @@ def getAllLinksToHistTables(readSaved = False):
     '''
     
     if readSaved == True:
-      urlOfExcelTables = pd.read_json('/Users/jjotterson/Dropbox/Projects/PythonPackages/beafullfetchpy/beafullfetchpy/data/NIPAUrlofExcelHistData.json',orient="records")  #TODO: fix this, need to include Manifest.in
+      urlOfExcelTables = pd.read_json('I:/Jamesot/Projects/outside/beafullfetchpy/beafullfetchpy/data/NIPAUrlofExcelHistData.json',orient="records")  #TODO: fix this, need to include Manifest.in
       return( urlOfExcelTables )
      
     dfUrlQYVintage = NIPAHistUrlOfQYVintage()
@@ -270,24 +271,25 @@ for x in raw:
       #
       Results['Notes'] = {
           'NoteRef': x,     #TODO remove -A, Qtr, -Q etc -M
-          'NoteText': " - ".join( [table.columns[0]] + table.iloc[:5,0].to_list() )
+          'NoteText': " - ".join( [table.columns[0]] + list(table.iloc[:5,0]) )
       }
       #main data and footnote comments
       dataTab = table.iloc[7:]  #TODO: check when quarters are indicated in the next line
       #column names
-      colNames = table.iloc[6].to_list()
+      colNames = list(table.iloc[6])
       colNames[1] = 'LineDescription'
       colNames[2] = 'SeriesCode'
+      colNames = list(map(lambda x: str(int(x)) if not isinstance(x,str) else x , colNames)  ) #all columns as strings.
       dataTab.columns = colNames
       dataTab.reset_index(drop=True,inplace=True)
 
       #store footnotes on the notes part of the results
-      footnotes = dataTab.loc[dataTab['LineDescription'].isnull() & dataTab['Line'].notnull()].iloc[:, 0].to_list()
+      footnotes = list( dataTab.loc[dataTab['LineDescription'].isnull() & dataTab['Line'].notnull()].iloc[:, 0] )
       Results['Notes']['Footnotes'] = dict(zip(range(1,1+len(footnotes)),footnotes))
       dataTab = dataTab.loc[dataTab['LineDescription'].notnull()]
 
       #include graph structure:
-      indents = dataTab.LineDescription.map(lambda x: len(x) - len(x.lstrip(' '))).to_list()
+      indents = dataTab.LineDescription.map(lambda x: len(x) - len(x.lstrip(' '))) 
       dataTab.insert(3, 'Indentations', indents)
 
       #save table structure
@@ -303,6 +305,11 @@ for x in raw:
 
       #reshape data and save
       mindex = pd.MultiIndex.from_frame(dataTab.iloc[:, :4])
+
+
+      #json
+      #out = json.dumps(test)
+      #revert = json.loads(out)
 
 
 
