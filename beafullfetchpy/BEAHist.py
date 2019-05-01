@@ -269,11 +269,11 @@ for x in raw:
       table = raw[x]
       #
       Results['Notes'] = {
-          'NoteRef': x,
+          'NoteRef': x,     #TODO remove -A, Qtr, -Q etc -M
           'NoteText': " - ".join( [table.columns[0]] + table.iloc[:5,0].to_list() )
       }
       #main data and footnote comments
-      dataTab = table.iloc[7:]  # todo: check when quarters are indicated in the next line
+      dataTab = table.iloc[7:]  #TODO: check when quarters are indicated in the next line
       #column names
       colNames = table.iloc[6].to_list()
       colNames[1] = 'LineDescription'
@@ -281,13 +281,28 @@ for x in raw:
       dataTab.columns = colNames
       dataTab.reset_index(drop=True,inplace=True)
 
-      #serpate main and comments, get meta:
+      #store footnotes on the notes part of the results
       footnotes = dataTab.loc[dataTab['LineDescription'].isnull() & dataTab['Line'].notnull()].iloc[:, 0].to_list()
       Results['Notes']['Footnotes'] = dict(zip(range(1,1+len(footnotes)),footnotes))
-
       dataTab = dataTab.loc[dataTab['LineDescription'].notnull()]
-      #metadata
-      dataTabne"].loc[dataTab['Line'].isnull()] = dataTab['Line'].ffill().loc[dataTab['Line'].isnull()] + .01
+
+      #include graph structure:
+      indents = dataTab.LineDescription.map(lambda x: len(x) - len(x.lstrip(' '))).to_list()
+      dataTab.insert(3, 'Indentations', indents)
+
+      #save table structure
+      Results['Notes']['TableStructure'] = dataTab.reset_index().iloc[:,:5].fillna('').to_dict('list')
+
+      #clean up table
+      #remove subsection headings (these have no data)
+      dataTab = dataTab.loc[dataTab['SeriesCode'].notna()]
+
+      dataTab.LineDescription = dataTab.LineDescription.map(lambda x: re.sub('\\\\.\\\\', '', x) )
+      dataTab.LineDescription = dataTab.LineDescription.map(lambda x: re.sub('[\w]*:','',x))  #removes Less:, Equals:...
+      dataTab.LineDescription = dataTab.LineDescription.map(lambda x : x.lstrip(" "))  #do this last to avoid the case when space is created
+
+      #reshape data and save
+      mindex = pd.MultiIndex.from_frame(dataTab.iloc[:, :4])
 
 
-vv.index(
+

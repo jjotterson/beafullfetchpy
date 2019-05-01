@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="7f328fc0-7d4d-4a40-a7e7-58a028cdd1c7" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/beafullfetchpy/BEAHist.py" beforeDir="false" afterPath="$PROJECT_DIR$/beafullfetchpy/BEAHist.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -19,8 +18,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/beafullfetchpy/BEAHist.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="305">
-              <caret line="278" column="37" lean-forward="true" selection-start-line="278" selection-start-column="37" selection-end-line="278" selection-end-column="37" />
+            <state relative-caret-position="358">
+              <caret line="303" column="29" selection-start-line="303" selection-start-column="29" selection-end-line="303" selection-end-column="29" />
               <folding>
                 <element signature="e#0#34#0" expanded="true" />
               </folding>
@@ -68,9 +67,9 @@
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="153" />
-    <option name="y" value="30" />
+  <component name="ProjectFrameBounds">
+    <option name="x" value="37" />
+    <option name="y" value="52" />
     <option name="width" value="1764" />
     <option name="height" value="985" />
   </component>
@@ -192,11 +191,12 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="23" width="1440" height="806" extended-state="6" />
+    <frame x="37" y="52" width="1764" height="985" extended-state="0" />
+    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.6439024" visible="true" weight="0.21316166" />
-      <window_info id="Structure" order="1" sideWeight="0.35609755" side_tool="true" weight="0.17305459" />
-      <window_info id="Favorites" order="2" sideWeight="0.35609755" side_tool="true" weight="0.17305459" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.71299636" visible="true" weight="0.17305459" />
+      <window_info id="Structure" order="1" sideWeight="0.35531136" side_tool="true" weight="0.17305459" />
+      <window_info id="Favorites" order="2" sideWeight="0.2870036" side_tool="true" visible="true" weight="0.17305459" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
       <window_info anchor="bottom" id="Run" order="2" weight="0.32913166" />
@@ -207,7 +207,7 @@
       <window_info anchor="bottom" id="Version Control" order="7" weight="0.32922733" />
       <window_info anchor="bottom" id="Terminal" order="8" weight="0.23852183" />
       <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" />
-      <window_info active="true" anchor="bottom" id="Python Console" order="10" visible="true" weight="0.4859944" />
+      <window_info active="true" anchor="bottom" id="Python Console" order="10" visible="true" weight="0.37961927" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
@@ -239,8 +239,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/beafullfetchpy/BEAHist.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="305">
-          <caret line="278" column="37" lean-forward="true" selection-start-line="278" selection-start-column="37" selection-end-line="278" selection-end-column="37" />
+        <state relative-caret-position="358">
+          <caret line="303" column="29" selection-start-line="303" selection-start-column="29" selection-end-line="303" selection-end-column="29" />
           <folding>
             <element signature="e#0#34#0" expanded="true" />
           </folding>
