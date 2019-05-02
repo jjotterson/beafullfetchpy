@@ -107,7 +107,7 @@ def getAllLinksToHistTables(readSaved = False):
     '''
     
     if readSaved == True:
-      urlOfExcelTables = pd.read_json('/Users/jjotterson/Dropbox/Projects/PythonPackages/beafullfetchpy/beafullfetchpy/data/NIPAUrlofExcelHistData.json',orient="records")  #TODO: fix this, need to include Manifest.in
+      urlOfExcelTables = pd.read_json('I:\Jamesot\Projects\outside\beafullfetchpy\beafullfetchpy\data\NIPAUrlofExcelHistData.json',orient="records")  #TODO: fix this, need to include Manifest.in
       return( urlOfExcelTables )
      
     dfUrlQYVintage = NIPAHistUrlOfQYVintage()
@@ -202,12 +202,12 @@ def getAndSaveData(range,filename,excelTables, quiet = True):
     tableRange = excelTables.iloc[range]
     
     fullnipaData = getNIPADataFromListofLinks(tableRange)
-
+    
     serialized = pickle.dumps(fullnipaData)
         
     with open(filename,'wb') as file_object:
         file_object.write(serialized)
-
+     
     if quiet == False:
         print( "finished loading!")
         print(range)
@@ -265,15 +265,15 @@ if __name__ == '__main__':
 raw = beaHistRaw[0]['data']
 formatedData = []
 for x in raw:
-
-    if x not 'Contents':
+    if not x == 'Contents':
+      print(x)
       #Results -- Data, Statistic (NIPA Table), UTCProductionTime (now), Notes, and Dimensions ##########################
       Results = {}
       table = raw[x]
       #
       Results['Notes'] = {
           'NoteRef': re.sub('-.$|Qrt$|Annual|A$|M$','',x).strip(" "),     #TODO remove -A, Qtr, -Q etc -M
-          'NoteText': " - ".join( [table.columns[0]] + list(table.iloc[:5,0]) )
+          'NoteText': " - ".join( [table.columns[0]] + [ str(entry) for entry in list(table.iloc[:5,0])] )   #TODO: replace nan with ''
       }
       #main data and footnote comments
       dataTab = table.iloc[7:]  #TODO: check when quarters are indicated in the next line
@@ -284,54 +284,60 @@ for x in raw:
       colNames = list(map(lambda x: str(int(x)) if not isinstance(x,str) else x , colNames)  ) #all columns as strings.
       dataTab.columns = colNames
       dataTab.reset_index(drop=True,inplace=True)
-
+      
       #store footnotes on the notes part of the results
       footnotes = list( dataTab.loc[dataTab['LineDescription'].isnull() & dataTab['Line'].notnull()].iloc[:, 0] )
       Results['Notes']['Footnotes'] = dict(zip(range(1,1+len(footnotes)),footnotes))
       dataTab = dataTab.loc[dataTab['LineDescription'].notnull()]
-
+      
       #include graph structure:
       indents = dataTab.LineDescription.map(lambda x: len(x) - len(x.lstrip(' '))) 
       dataTab.insert(3, 'Indentations', indents)
-
+      
       #save table structure
       Results['Notes']['TableStructure'] = dataTab.reset_index().iloc[:,:5].fillna('').to_dict('list')
-
+      
       #clean up table
       #remove subsection headings (these have no data)
       dataTab = dataTab.loc[dataTab['SeriesCode'].notna()]
-
+      
       dataTab.LineDescription = dataTab.LineDescription.map(lambda x: re.sub('\\\\.\\\\', '', x) )
       dataTab.LineDescription = dataTab.LineDescription.map(lambda x: re.sub('[\w]*:','',x))  #removes Less:, Equals:...
       dataTab.LineDescription = dataTab.LineDescription.map(lambda x : x.lstrip(" "))  #do this last to avoid the case when space is created
-
+      
       #reshape data and save
       outData = pd.melt(dataTab, id_vars=['Line', 'LineDescription', 'SeriesCode', 'Indentations'],var_name= 'TimePeriod',value_name = 'DataValue' )
       outData.DataValue = pd.to_numeric(outData.DataValue, errors = 'coerce').map(lambda x: str(x))  #values are as strings, here removed non numbers as .....
       outData.rename(index=str, columns={'Line': 'LineNumber'},inplace=True)
-      outData.insert(0, 'TableName', re.sub('-.$|Qrt$|Annual|A$|M$','',x).strip(" ") )
-      outData.insert(len(outData.keys()),'UNIT_MULT',0)    #TODO check T10101, always 0, as in many other cases.
-      outData.insert(len(outData.keys()), 'CL_UNIT', table.iloc[0,0])  # TODO check, T10101: CL_UNIT Percent change, annual rate
+      #outData.insert(0, 'TableName', re.sub('-.$|Qrt$|Annual|A$|M$','',x).strip(" ") )
+      #outData.insert(len(outData.keys()),'UNIT_MULT',0)    #TODO check T10101, always 0, as in many other cases.
+      #outData.insert(len(outData.keys()), 'CL_UNIT', table.iloc[0,0])  # TODO check, T10101: CL_UNIT Percent change, annual rate
       #outData.insert(len(outData.keys()), 'CL_UNIT', )  # check   TODO: this is missing example of T10101: METRIC_NAME Fisher Quantity Index
-
-
-      Results['Data'] = outData.to_dict(orient='records')
+      
+      
+      Results['Data'] = outData.to_dict("list")  #maybe too big outData.to_dict(orient='records')
       Results['UTCProductionTime'] = str(datetime.now()).replace(" ","T")
       Results['Statistic'] = "NIPA Table"
-      Results['Dimensions'] = [
-          {'Ordinal': '1', 'Name': 'TableName', 'DataType': 'string', 'IsValue': '0'},
-          {'Ordinal': '2', 'Name': 'SeriesCode', 'DataType': 'string', 'IsValue': '0'},
-          {'Ordinal': '3', 'Name': 'LineNumber', 'DataType': 'numeric', 'IsValue': '0'},
-          {'Ordinal': '4', 'Name': 'LineDescription', 'DataType': 'string', 'IsValue': '0'},
-          {'Ordinal': '5', 'Name': 'Indentations', 'DataType': 'numeric', 'IsValue': '0'},
-          {'Ordinal': '6', 'Name': 'TimePeriod', 'DataType': 'string', 'IsValue': '0'},
-          #{'Ordinal': '7', 'Name': 'CL_UNIT', 'DataType': 'string', 'IsValue': '0'},
-          {'Ordinal': '8', 'Name': 'UNIT_MULT', 'DataType': 'numeric', 'IsValue': '0'},
-          {'Ordinal': '9', 'Name': 'METRIC_NAME', 'DataType': 'string', 'IsValue': '0'},
-          {'Ordinal': '10', 'Name': 'DataValue', 'DataType': 'numeric', 'IsValue': '1'}
-          ]
-      #json
-      #out = json.dumps(test)
+      #Results['Dimensions'] = [
+      #    {'Ordinal': '1', 'Name': 'TableName', 'DataType': 'string', 'IsValue': '0'},
+      #    {'Ordinal': '2', 'Name': 'SeriesCode', 'DataType': 'string', 'IsValue': '0'},
+      #    {'Ordinal': '3', 'Name': 'LineNumber', 'DataType': 'numeric', 'IsValue': '0'},
+      #    {'Ordinal': '4', 'Name': 'LineDescription', 'DataType': 'string', 'IsValue': '0'},
+      #    {'Ordinal': '5', 'Name': 'Indentations', 'DataType': 'numeric', 'IsValue': '0'},
+      #    {'Ordinal': '6', 'Name': 'TimePeriod', 'DataType': 'string', 'IsValue': '0'},
+      #    #{'Ordinal': '7', 'Name': 'CL_UNIT', 'DataType': 'string', 'IsValue': '0'},
+      #    {'Ordinal': '8', 'Name': 'UNIT_MULT', 'DataType': 'numeric', 'IsValue': '0'},
+      #    {'Ordinal': '9', 'Name': 'METRIC_NAME', 'DataType': 'string', 'IsValue': '0'},
+      #    {'Ordinal': '10', 'Name': 'DataValue', 'DataType': 'numeric', 'IsValue': '1'}
+      #    ]
+      #json dump
+      jsFilename = 'beafullfetchpy/beaDataJson/' +  re.sub("[\w]*/","",filename) + "_" + x.replace("-","_") + ""  #need to keep full sheet name (x)
+      with open( jsFilename, 'wb') as outfile:
+          #json.dump(Results,outfile)
+          v = json.dumps(Results)         
+          serialized = pickle.dumps(v)
+          outfile.write(serialized)
+
       #revert = json.loads(out)
 
 
