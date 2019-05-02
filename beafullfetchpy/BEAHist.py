@@ -4,6 +4,8 @@ import requests as rq            # get json
 import bs4 as bs                 # scraping websites
 import urllib.request            # work/connect to url    
 import re                        # regular expression
+from datetime import datetime
+
 import json
 #import datetime
 #from CFGBeaHist import *        # get basic config.
@@ -105,7 +107,7 @@ def getAllLinksToHistTables(readSaved = False):
     '''
     
     if readSaved == True:
-      urlOfExcelTables = pd.read_json('I:/Jamesot/Projects/outside/beafullfetchpy/beafullfetchpy/data/NIPAUrlofExcelHistData.json',orient="records")  #TODO: fix this, need to include Manifest.in
+      urlOfExcelTables = pd.read_json('/Users/jjotterson/Dropbox/Projects/PythonPackages/beafullfetchpy/beafullfetchpy/data/NIPAUrlofExcelHistData.json',orient="records")  #TODO: fix this, need to include Manifest.in
       return( urlOfExcelTables )
      
     dfUrlQYVintage = NIPAHistUrlOfQYVintage()
@@ -264,13 +266,13 @@ raw = beaHistRaw[0]['data']
 formatedData = []
 for x in raw:
 
-    # Data
     if x not 'Contents':
+      #Results -- Data, Statistic (NIPA Table), UTCProductionTime (now), Notes, and Dimensions ##########################
       Results = {}
       table = raw[x]
       #
       Results['Notes'] = {
-          'NoteRef': x,     #TODO remove -A, Qtr, -Q etc -M
+          'NoteRef': re.sub('-.$|Qrt$|Annual|A$|M$','',x).strip(" "),     #TODO remove -A, Qtr, -Q etc -M
           'NoteText': " - ".join( [table.columns[0]] + list(table.iloc[:5,0]) )
       }
       #main data and footnote comments
@@ -304,9 +306,30 @@ for x in raw:
       dataTab.LineDescription = dataTab.LineDescription.map(lambda x : x.lstrip(" "))  #do this last to avoid the case when space is created
 
       #reshape data and save
-      mindex = pd.MultiIndex.from_frame(dataTab.iloc[:, :4])
+      outData = pd.melt(dataTab, id_vars=['Line', 'LineDescription', 'SeriesCode', 'Indentations'],var_name= 'TimePeriod',value_name = 'DataValue' )
+      outData.DataValue = pd.to_numeric(outData.DataValue, errors = 'coerce').map(lambda x: str(x))  #values are as strings, here removed non numbers as .....
+      outData.rename(index=str, columns={'Line': 'LineNumber'},inplace=True)
+      outData.insert(0, 'TableName', re.sub('-.$|Qrt$|Annual|A$|M$','',x).strip(" ") )
+      outData.insert(len(outData.keys()),'UNIT_MULT',0)    #TODO check T10101, always 0, as in many other cases.
+      outData.insert(len(outData.keys()), 'CL_UNIT', table.iloc[0,0])  # TODO check, T10101: CL_UNIT Percent change, annual rate
+      #outData.insert(len(outData.keys()), 'CL_UNIT', )  # check   TODO: this is missing example of T10101: METRIC_NAME Fisher Quantity Index
 
 
+      Results['Data'] = outData.to_dict(orient='records')
+      Results['UTCProductionTime'] = str(datetime.now()).replace(" ","T")
+      Results['Statistic'] = "NIPA Table"
+      Results['Dimensions'] = [
+          {'Ordinal': '1', 'Name': 'TableName', 'DataType': 'string', 'IsValue': '0'},
+          {'Ordinal': '2', 'Name': 'SeriesCode', 'DataType': 'string', 'IsValue': '0'},
+          {'Ordinal': '3', 'Name': 'LineNumber', 'DataType': 'numeric', 'IsValue': '0'},
+          {'Ordinal': '4', 'Name': 'LineDescription', 'DataType': 'string', 'IsValue': '0'},
+          {'Ordinal': '5', 'Name': 'Indentations', 'DataType': 'numeric', 'IsValue': '0'},
+          {'Ordinal': '6', 'Name': 'TimePeriod', 'DataType': 'string', 'IsValue': '0'},
+          #{'Ordinal': '7', 'Name': 'CL_UNIT', 'DataType': 'string', 'IsValue': '0'},
+          {'Ordinal': '8', 'Name': 'UNIT_MULT', 'DataType': 'numeric', 'IsValue': '0'},
+          {'Ordinal': '9', 'Name': 'METRIC_NAME', 'DataType': 'string', 'IsValue': '0'},
+          {'Ordinal': '10', 'Name': 'DataValue', 'DataType': 'numeric', 'IsValue': '1'}
+          ]
       #json
       #out = json.dumps(test)
       #revert = json.loads(out)
