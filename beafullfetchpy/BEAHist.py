@@ -210,26 +210,33 @@ def getAndSaveData(range,filename,excelTables, quiet = True):
         print( "finished loading!")
         print(range)
 
-def formatBeaRaw2Dict( raw, outputFormat = 'dict', save = False saveAs = '' ):
+def formatBeaRaw( raw, outputFormat = 'dict', save = 'no', saveAs = '' ):
     '''
       Raw is the pandas reading of the BEA excel table (has all sheets).
       output formats:
-        - (dict) dictionary 
+        - (dict) dictionary in a format close to json
+        - (dictPandas) dictionary where tables are in Pandas format
         - (json)
-        - (zlibAndb64encode) zlib compression followed by b64econde
-        - (gzip)
-        - (pickle)
-      save: indicates if want to save, and saveAs is the (path) filename
+        - (zlib64) zlib compression of json followed by b64econde  
+           to decompress use json.loads(zlib.decompress(b64decode( variable  )))  
+        - (gzip)   gzip compression of json
+        - (pickle) pickle compression of json
+      save: 
+        - 'no'    - will not save the output
+        - 'block' - will save all tables in the raw together
+        - 'tablewise' - saves each table separatedly, will append table names to the saveAs string
     '''
+    Results = {}
     for x in raw:
+        
         if x == 'Contents':
             continue 
            
         #Results -- Data, Statistic (NIPA Table), UTCProductionTime (now), Notes, and Dimensions ##########################
-        Results = {}
+        Results[x] = {}
         table = raw[x]
         #
-        Results['Notes'] = {
+        Results[x]['Notes'] = {
             'NoteRef': re.sub('-.$|Qrt$|Annual|A$|M$','',x).strip(" "),     #TODO remove -A, Qtr, -Q etc -M
             'NoteText': " - ".join( [table.columns[0]] + [ str(entry) for entry in list(table.iloc[:5,0])] )   #TODO: replace nan with ''
         }
@@ -245,7 +252,7 @@ def formatBeaRaw2Dict( raw, outputFormat = 'dict', save = False saveAs = '' ):
         
         #store footnotes on the notes part of the results
         footnotes = list( dataTab.loc[dataTab['LineDescription'].isnull() & dataTab['Line'].notnull()].iloc[:, 0] )
-        Results['Notes']['Footnotes'] = dict(zip(range(1,1+len(footnotes)),footnotes))
+        Results[x]['Notes']['Footnotes'] = dict(zip(range(1,1+len(footnotes)),footnotes))
         dataTab = dataTab.loc[dataTab['LineDescription'].notnull()]
         
         #include graph structure:
@@ -253,7 +260,7 @@ def formatBeaRaw2Dict( raw, outputFormat = 'dict', save = False saveAs = '' ):
         dataTab.insert(3, 'Indentations', indents)
         
         #save table structure
-        Results['Notes']['TableStructure'] = dataTab.reset_index().iloc[:,:5].fillna('').to_dict('list')
+        Results[x]['Notes']['TableStructure'] = dataTab.reset_index().iloc[:,:5].fillna('').to_dict('list')
         
         #clean up table
         #remove subsection headings (these have no data)
@@ -266,17 +273,22 @@ def formatBeaRaw2Dict( raw, outputFormat = 'dict', save = False saveAs = '' ):
         #reshape data and save
         outData = pd.melt(dataTab, id_vars=['Line', 'LineDescription', 'SeriesCode', 'Indentations'],var_name= 'TimePeriod',value_name = 'DataValue' )
         outData.DataValue = pd.to_numeric(outData.DataValue, errors = 'coerce').map(lambda x: str(x))  #values are as strings, here removed non numbers as .....
+        if outputFormat == 'dictPandas':  #TODO: just reshape the above data (so, assure numeric) data if not returning pandas
+            outData = dataTab
         outData.rename(index=str, columns={'Line': 'LineNumber'},inplace=True)
         outData.insert(0, 'TableName', re.sub('-.$|Qrt$|Annual|A$|M$','',x).strip(" ") )
         #outData.insert(len(outData.keys()),'UNIT_MULT',0)    #TODO check T10101, always 0, as in many other cases.  Bit costly to save these UNIT_Mult, CL data.
         #outData.insert(len(outData.keys()), 'CL_UNIT', table.iloc[0,0])  # TODO check, T10101: CL_UNIT Percent change, annual rate
         #outData.insert(len(outData.keys()), 'CL_UNIT', 0)  # check   TODO: this is missing example of T10101: METRIC_NAME Fisher Quantity Index
         
+        if outputFormat == "dictPandas":
+            Results[x]['Data'] = outData
+        else:
+            Results[x]['Data'] = outData.to_dict("list")  #maybe too big outData.to_dict(orient='records')
         
-        Results['Data'] = outData.to_dict("list")  #maybe too big outData.to_dict(orient='records')
-        Results['UTCProductionTime'] = str(datetime.now()).replace(" ","T")
-        Results['Statistic'] = "NIPA Table"
-        Results['Dimensions'] = [
+        Results[x]['UTCProductionTime'] = str(datetime.now()).replace(" ","T")
+        Results[x]['Statistic'] = "NIPA Table"
+        Results[x]['Dimensions'] = [
             {'Ordinal': '1', 'Name': 'TableName', 'DataType': 'string', 'IsValue': '0'},
             {'Ordinal': '2', 'Name': 'SeriesCode', 'DataType': 'string', 'IsValue': '0'},
             {'Ordinal': '3', 'Name': 'LineNumber', 'DataType': 'numeric', 'IsValue': '0'},
@@ -289,16 +301,39 @@ def formatBeaRaw2Dict( raw, outputFormat = 'dict', save = False saveAs = '' ):
             {'Ordinal': '10', 'Name': 'DataValue', 'DataType': 'numeric', 'IsValue': '1'}
             ]
         
-        #Put in final format (and save or return)  #TODO: refactor this part
-        if outputFormat == 'zlibAndb64encode':
-            output = json.dumps(Results) 
-            output = zlib.compress(output.encode('utf-8'))
-            output = (b64encode(output)).decode('ascii')
-            if save == True:
-                with open( saveAs, 'w') as outfile:
-                    outfile.write(output)
-            else:
-                return(output)
+    #Put in final format (and save or return)  #TODO: refactor this part, also,include the option of saving the tables separateldy
+    if outputFormat == 'dict':
+        output = Results
+        if save == 'block':
+            with open( saveAs, 'w') as outfile:
+                outfile.write(output)
+            pass
+        elif save == "tablewise":
+
+        else:
+            return(output)
+    
+    if outputFormat == 'dictPandas':
+        output = Results
+        if save == True:
+            with open( saveAs, 'w') as outfile:
+                outfile.write(output)
+            pass
+        else:
+            return(output)
+     
+    if outputFormat == 'zlibb64':
+        output = json.dumps(Results) 
+        output = zlib.compress(output.encode('utf-8'))
+        output = b64encode(output)
+        output = output.decode('ascii')
+        if save == True:
+            with open( saveAs, 'w') as outfile:
+                outfile.write(output)
+            pass
+        else:
+            return(output)
+
 
 if __name__ == '__main__':
     #dfUrlQYVintage = NIPAHistUrlOfQYVintage()
@@ -340,6 +375,7 @@ if __name__ == '__main__':
     #
     #
     filename = 'beafullfetchpy/beaData/beaHist1'
+    jsFilename = 'beafullfetchpy/beaDataJson/' +  re.sub("[\w]*/","",filename) + "_" + x.replace("-","_") + ""  #need to keep full sheet name (x)
     with open(filename,'rb') as file_object:
         raw_data = file_object.read()
 
@@ -349,6 +385,10 @@ if __name__ == '__main__':
 
 
 raw = beaHistRaw[0]['data']
+
+
+
+
 formatedData = []
 for x in raw:
     if not x == 'Contents':
@@ -417,7 +457,7 @@ for x in raw:
           {'Ordinal': '10', 'Name': 'DataValue', 'DataType': 'numeric', 'IsValue': '1'}
           ]
       #json dump
-      jsFilename = 'beafullfetchpy/beaDataJson/' +  re.sub("[\w]*/","",filename) + "_" + x.replace("-","_") + ""  #need to keep full sheet name (x)
+     
       with open( jsFilename, 'w') as outfile:
           #json.dump(Results,outfile)
           v = json.dumps(Results) 
