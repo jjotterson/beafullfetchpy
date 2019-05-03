@@ -7,6 +7,12 @@ import re                        # regular expression
 from datetime import datetime
 
 import json
+import gzip
+import sys
+import pickle
+import zlib 
+from base64 import b64encode, b64decode
+
 #import datetime
 #from CFGBeaHist import *        # get basic config.
 
@@ -213,12 +219,12 @@ def getAndSaveData(range,filename,excelTables, quiet = True):
 def formatBeaRaw( raw, outputFormat = 'dict', save = 'no', saveAs = '' ):
     '''
       Raw is the pandas reading of the BEA excel table (has all sheets).
-      output formats:
+      output formats (note, all compressed outputs are of json format):  #TODO: separate format (dict/json vs pandas) from compression
         - (dict) dictionary in a format close to json
         - (dictPandas) dictionary where tables are in Pandas format
         - (json)
         - (zlib64) zlib compression of json followed by b64econde  
-           to decompress use json.loads(zlib.decompress(b64decode( variable  )))  
+                   to decompress use json.loads(zlib.decompress(b64decode( variable  )))  
         - (gzip)   gzip compression of json
         - (pickle) pickle compression of json
       save: 
@@ -305,34 +311,115 @@ def formatBeaRaw( raw, outputFormat = 'dict', save = 'no', saveAs = '' ):
     if outputFormat == 'dict':
         output = Results
         if save == 'block':
-            with open( saveAs, 'w') as outfile:
-                outfile.write(output)
+            #with open( saveAs, 'w') as outfile:
+            #    outfile.write(output)
+            print("Not Saved! Choose pickle to save.")
             pass
         elif save == "tablewise":
-
+            #for entry in output:
+            #    with open( saveAs + entry.replace("-","_"), 'w') as outfile:
+            #        outfile.write(output)
+            print("Not Saved! Choose pickle to save.")
+            pass    
         else:
             return(output)
     
     if outputFormat == 'dictPandas':
         output = Results
-        if save == True:
-            with open( saveAs, 'w') as outfile:
-                outfile.write(output)
+        if save == 'block':
+            #with open( saveAs, 'w') as outfile:
+            #    outfile.write(output)
+            print("Not Saved! Choose pickle to save.")
             pass
+        elif save == "tablewise":
+            #for entry in output:
+            #    with open( saveAs + entry.replace("-","_"), 'w') as outfile:
+            #        outfile.write(output)
+            print("Not Saved! Choose pickle to save.")
+            pass    
         else:
             return(output)
      
-    if outputFormat == 'zlibb64':
-        output = json.dumps(Results) 
-        output = zlib.compress(output.encode('utf-8'))
-        output = b64encode(output)
-        output = output.decode('ascii')
-        if save == True:
+    if outputFormat == 'zlib64':
+        output = Results        
+        if save == 'block':
+            outputF = json.dumps(output) 
+            outputF = zlib.compress(outputF.encode('utf-8'))
+            outputF = b64encode(outputF)
+            outputF = outputF.decode('ascii')
             with open( saveAs, 'w') as outfile:
-                outfile.write(output)
+                outfile.write(outputF)
             pass
+        elif save == "tablewise":
+            for entry in output:
+                outputF = json.dumps(output[entry]) 
+                outputF = zlib.compress(outputF.encode('utf-8'))
+                outputF = b64encode(outputF)
+                outputF = outputF.decode('ascii')
+                with open( saveAs + entry.replace("-","_"), 'w') as outfile:
+                    outfile.write(outputF)
+            pass    
         else:
-            return(output)
+            outputF = json.dumps(output) 
+            outputF = zlib.compress(outputF.encode('utf-8'))
+            outputF = b64encode(outputF)
+            outputF = outputF.decode('ascii')
+            return(outputF)
+    
+    if outputFormat == 'gzip':
+        output = Results
+        if save == 'block':
+            outputF = json.dumps(output) 
+            outputF = bytes(outputF,'utf-8')
+            with gzip.open( saveAs+'.txt.gz', 'wb') as outfile:
+                outfile.write(outputF)
+            pass
+        elif save == "tablewise":
+            for entry in output:
+                outputF = json.dumps(output[entry]) 
+                outputF = bytes(outputF,'utf-8')
+                with gzip.open( saveAs + entry.replace("-","_")+".txt.gz", 'wb') as outfile:
+                    outfile.write(outputF)
+            pass    
+        else:
+            outputF = json.dumps(output) 
+            outputF = bytes(outputF,'utf-8')
+            return(gzip.compress(outputF))
+      
+    if outputFormat == 'json':
+        output = Results
+        if save == 'block':
+            outputF = json.dumps(output) 
+            with open( saveAs+'.json', 'w') as outfile:
+                outfile.write(outputF)
+            pass
+        elif save == "tablewise":
+            for entry in output:
+                outputF = json.dumps(output[entry]) 
+                with open( saveAs + entry.replace("-","_")+".json", 'w') as outfile:
+                    outfile.write(outputF)
+            pass    
+        else:
+            outputF = json.dumps(output) 
+            return(outputF) 
+     
+    if outputFormat == 'pickle':
+        output = Results
+        if save == 'block':
+            outputF = output 
+            with open( saveAs+'.pickle', 'wb') as outfile:
+               pickle.dump(outputF,outfile,protocol=pickle.HIGHEST_PROTOCOL)
+            pass
+        elif save == "tablewise":
+            for entry in output:
+                outputF = output[entry]
+                with open( saveAs + entry.replace("-","_")+".pickle", 'wb') as outfile:
+                    pickle.dump(outputF,outfile,protocol=pickle.HIGHEST_PROTOCOL)
+            pass    
+        else:
+            outputF = pickle.dumps(output,protocol=pickle.HIGHEST_PROTOCOL)
+            return(outputF)      
+
 
 
 if __name__ == '__main__':
