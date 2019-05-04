@@ -232,15 +232,26 @@ def formatBeaRaw( raw, outputFormat = 'dict', save = 'no', saveAs = '' ):
         - 'block' - will save all tables in the raw together
         - 'tablewise' - saves each table separatedly, will append table names to the saveAs string
     '''
+    #fix table names:
+    newRawKeys = dict(zip(
+        list(raw),
+        [re.sub(" |-", "_", entry).replace('Qtr', 'Q').replace('Month', 'M').replace('Ann', 'A').strip() for entry in list(raw)]
+    ))
+    raw = { newRawKeys[entry] : raw.pop(entry)   for entry in newRawKeys  }
     Results = {}
     for x in raw:
         
         if x == 'Contents':
             continue 
-           
-        #Results -- Data, Statistic (NIPA Table), UTCProductionTime (now), Notes, and Dimensions ##########################
+
         Results[x] = {}
-        table = raw[x]
+        table = raw[x].copy()
+        #fix the case when the quarter or month is listed on a separated line
+        if table.iloc[7,:].isna()[0] == True and table.iloc[7,:].isna()[1] == True:
+            freq = x[-1]  #Q, A, or M
+            table.iloc[6, 3:] = [str(x[0]) + freq + str(x[1]) for x in zip(table.iloc[6, 3:], table.iloc[7, 3:])]
+            table.drop(table.index[7],inplace = True)
+        #Results -- Data, Statistic (NIPA Table), UTCProductionTime (now), Notes, and Dimensions ##########################
         #
         Results[x]['Notes'] = {
             'NoteRef': re.sub('-.$|Qrt$|Annual|A$|M$','',x).strip(" "),     #TODO remove -A, Qtr, -Q etc -M
@@ -431,11 +442,8 @@ if __name__ == '__main__':
     #excelTables = excelTables[['index', 'yearQuarter', 'vintage', 'Title', 'Details', 'type', 'releaseDate', 'vintageLink', 'excelLink']]
     #excelTables.to_json('data/NIPAUrlofExcelHistData.json',orient="records")  #todo: fix this file pointer.
     excelTables = getAllLinksToHistTables(readSaved=True)
-    import sys
-    import pickle
-    import zlib 
-    from base64 import b64encode, b64decode
 
+    #downloads all NIPA hist excels from web in batch mode
     #for i in range(int(sys.argv[1]),int(sys.argv[1])+1000):
     #    rr = range( i, i+1 )
     #    filename = 'beafullfetchpy/beaData/beaHist' + str(i)
@@ -445,120 +453,19 @@ if __name__ == '__main__':
     #        print( i )
 
 
-    #rr = range( int(sys.argv[1]), int(sys.argv[2]) )
-    #filename = sys.argv[3]
-    #getAndSaveData(rr,filename,excelTables)
-
-    
-    #fullnipaData = getNIPADataFromListofLinks(excelTables)
-    #
-    #
-    #import pickle 
-    #serialized = pickle.dumps(fullnipaData)
-    #filename = 'serialized.native'
-    #
-    #with open(filename,'wb') as file_object:
-    #    file_object.write(serialized)
-    #
-    #
-    filename = 'beafullfetchpy/beaData/beaHist1'
-    jsFilename = 'beafullfetchpy/beaDataJson/' +  re.sub("[\w]*/","",filename) + "_" + x.replace("-","_") + ""  #need to keep full sheet name (x)
+    #get downloaded data, format and save
+    filename = 'beafullfetchpy/beaData/beaHist3000'
     with open(filename,'rb') as file_object:
         raw_data = file_object.read()
-
-
     beaHistRaw = pickle.loads(raw_data)
+    outFilename = 'beafullfetchpy/beaDataClean/' +  re.sub("[\w]*/","",filename) + "_"  #TODO: replace BeaHistn by vintage date
+    raw = beaHistRaw[0]['data']
+    tab = formatBeaRaw(raw, outputFormat='dictPandas', save='no', saveAs='')
+    print(tab.keys())
+    print(tab[list(tab.keys())[0]]['Data'].head())
+    print(tab[list(tab.keys())[1]]['Data'].head())
+
+    [str(x[0]) + 'M' + str(x[1]) for x in zip(v.iloc[6, 0:], v.iloc[7, 0:])]
 
 
-
-raw = beaHistRaw[0]['data']
-
-
-
-
-formatedData = []
-for x in raw:
-    if not x == 'Contents':
-      print(x)
-      #Results -- Data, Statistic (NIPA Table), UTCProductionTime (now), Notes, and Dimensions ##########################
-      Results = {}
-      table = raw[x]
-      #
-      Results['Notes'] = {
-          'NoteRef': re.sub('-.$|Qrt$|Annual|A$|M$','',x).strip(" "),     #TODO remove -A, Qtr, -Q etc -M
-          'NoteText': " - ".join( [table.columns[0]] + [ str(entry) for entry in list(table.iloc[:5,0])] )   #TODO: replace nan with ''
-      }
-      #main data and footnote comments
-      dataTab = table.iloc[7:]  #TODO: check when quarters are indicated in the next line
-      #column names
-      colNames = list(table.iloc[6])
-      colNames[1] = 'LineDescription'
-      colNames[2] = 'SeriesCode'
-      colNames = list(map(lambda x: str(int(x)) if not isinstance(x,str) else x , colNames)  ) #all columns as strings.
-      dataTab.columns = colNames
-      dataTab.reset_index(drop=True,inplace=True)
-      
-      #store footnotes on the notes part of the results
-      footnotes = list( dataTab.loc[dataTab['LineDescription'].isnull() & dataTab['Line'].notnull()].iloc[:, 0] )
-      Results['Notes']['Footnotes'] = dict(zip(range(1,1+len(footnotes)),footnotes))
-      dataTab = dataTab.loc[dataTab['LineDescription'].notnull()]
-      
-      #include graph structure:
-      indents = dataTab.LineDescription.map(lambda x: len(x) - len(x.lstrip(' '))) 
-      dataTab.insert(3, 'Indentations', indents)
-      
-      #save table structure
-      Results['Notes']['TableStructure'] = dataTab.reset_index().iloc[:,:5].fillna('').to_dict('list')
-      
-      #clean up table
-      #remove subsection headings (these have no data)
-      dataTab = dataTab.loc[dataTab['SeriesCode'].notna()]
-      
-      dataTab.LineDescription = dataTab.LineDescription.map(lambda x: re.sub('\\\\.\\\\', '', x) )
-      dataTab.LineDescription = dataTab.LineDescription.map(lambda x: re.sub('[\w]*:','',x))  #removes Less:, Equals:...
-      dataTab.LineDescription = dataTab.LineDescription.map(lambda x : x.lstrip(" "))  #do this last to avoid the case when space is created
-      
-      #reshape data and save
-      outData = pd.melt(dataTab, id_vars=['Line', 'LineDescription', 'SeriesCode', 'Indentations'],var_name= 'TimePeriod',value_name = 'DataValue' )
-      outData.DataValue = pd.to_numeric(outData.DataValue, errors = 'coerce').map(lambda x: str(x))  #values are as strings, here removed non numbers as .....
-      outData.rename(index=str, columns={'Line': 'LineNumber'},inplace=True)
-      outData.insert(0, 'TableName', re.sub('-.$|Qrt$|Annual|A$|M$','',x).strip(" ") )
-      #outData.insert(len(outData.keys()),'UNIT_MULT',0)    #TODO check T10101, always 0, as in many other cases.
-      #outData.insert(len(outData.keys()), 'CL_UNIT', table.iloc[0,0])  # TODO check, T10101: CL_UNIT Percent change, annual rate
-      #outData.insert(len(outData.keys()), 'CL_UNIT', 0)  # check   TODO: this is missing example of T10101: METRIC_NAME Fisher Quantity Index
-      
-      
-      Results['Data'] = outData.to_dict("list")  #maybe too big outData.to_dict(orient='records')
-      Results['UTCProductionTime'] = str(datetime.now()).replace(" ","T")
-      Results['Statistic'] = "NIPA Table"
-      Results['Dimensions'] = [
-          {'Ordinal': '1', 'Name': 'TableName', 'DataType': 'string', 'IsValue': '0'},
-          {'Ordinal': '2', 'Name': 'SeriesCode', 'DataType': 'string', 'IsValue': '0'},
-          {'Ordinal': '3', 'Name': 'LineNumber', 'DataType': 'numeric', 'IsValue': '0'},
-          {'Ordinal': '4', 'Name': 'LineDescription', 'DataType': 'string', 'IsValue': '0'},
-          {'Ordinal': '5', 'Name': 'Indentations', 'DataType': 'numeric', 'IsValue': '0'},
-          {'Ordinal': '6', 'Name': 'TimePeriod', 'DataType': 'string', 'IsValue': '0'},
-          #{'Ordinal': '7', 'Name': 'CL_UNIT', 'DataType': 'string', 'IsValue': '0'},
-          {'Ordinal': '8', 'Name': 'UNIT_MULT', 'DataType': 'numeric', 'IsValue': '0'},
-          {'Ordinal': '9', 'Name': 'METRIC_NAME', 'DataType': 'string', 'IsValue': '0'},
-          {'Ordinal': '10', 'Name': 'DataValue', 'DataType': 'numeric', 'IsValue': '1'}
-          ]
-      #json dump
-     
-      with open( jsFilename, 'w') as outfile:
-          #json.dump(Results,outfile)
-          v = json.dumps(Results) 
-          vb =   v.encode('utf-8') 
-          vz = zlib.compress(vb)
-          ven = b64encode(vz)
-          vas = ven.decode('ascii')
-          outfile.write(vas)
-          #json.loads(zlib.decompress(b64decode(vas)))  #decompress 
-          #pickle
-          #serialized = pickle.dumps(v)
-          #outfile.write(serialized)
-
-      #revert = json.loads(out)
-
-
-
+#case 310
