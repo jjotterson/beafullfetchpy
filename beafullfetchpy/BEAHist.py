@@ -16,13 +16,9 @@ from base64 import b64encode, b64decode
 #from CFGBeaHist import *        # get basic config.
 
 
-cfg = {
-  'beaUrl'   : 'https://apps.bea.gov/',
-  'histUrl'  : 'https://apps.bea.gov/histdata/',
-  'NIPAHistUrl'  : 'https://apps.bea.gov/histdata/histChildLevels.cfm?HMI=7',
-}
 
-def NIPAHistUrlOfQYVintage( 
+
+def urlNIPAHistQYVintage( 
         NIPAHistUrl  = 'https://apps.bea.gov/histdata/histChildLevels.cfm?HMI=7', #location of table of historical databases
         histUrl      = 'https://apps.bea.gov/histdata/',                          #missing part of the historical database https 
         replaceSpaceWith = "%20"
@@ -66,12 +62,12 @@ def NIPAHistUrlOfQYVintage(
     
     return( dfUrlQYVintage )
 
-def NIPAHistUrlOfQYVintageTypeSection( 
-          LineOfdfUrlQYVintage,                    #a line of the table output of  NIPAHistUrlOfQYVintage
+def urlNIPAHistQYVintageMainOrUnderlSection( 
+          LineOfdfUrlQYVintage,                    #a line of the table output of  urlNIPAHistQYVintage
           beaUrl = 'https://apps.bea.gov/'      
     ):
     '''
-       From the url of quarter year vintage data (see NIPAHistUrlOfQYVintage) make a table of the url of the 
+       From the url of quarter year vintage data (see urlNIPAHistQYVintage) make a table of the url of the 
         quarter year vintage type (main/underlying etc) and section
        The output urls point to excel tables.        
     '''  
@@ -115,12 +111,12 @@ def getAllLinksToHistTables(readSaved = False):
       urlOfExcelTables = pd.read_json('I:/Jamesot/Projects/outside/beafullfetchpy/beafullfetchpy/data/NIPAUrlofExcelHistData.json',orient="records")  #TODO: fix this, need to include Manifest.in
       return( urlOfExcelTables )
      
-    dfUrlQYVintage = NIPAHistUrlOfQYVintage()
+    dfUrlQYVintage = urlNIPAHistQYVintage()
     
     urlOfExcelTables = pd.DataFrame()
     for line in range(len(dfUrlQYVintage)):
         LineOfdfUrlQYVintage = dfUrlQYVintage.to_dict('records')[line]
-        out = NIPAHistUrlOfQYVintageTypeSection( LineOfdfUrlQYVintage )
+        out = urlNIPAHistQYVintageMainOrUnderlSection( LineOfdfUrlQYVintage )
         
         for type in out:
           out[type]['type'] = type
@@ -158,48 +154,48 @@ def getNIPADataFromListofLinks( tableOfLinks , asJson = False):
           print( 'got item '+ str(count) )
     return( nipaData )
 
-def getHistTable( tableName, yearQuarter, vintage = "Third", timeUnit = "Q", cfg = cfg ):
-    sectionNum = tableName[1]
-    r = re.compile( tableName.replace('T','') + '.*' + timeUnit )  #will search for sheet names with this regex.
-    maindf  = NIPAHistUrlOfQYVintage( cfg['NIPAHistUrl'], cfg['histUrl'] )
-    dfline  = maindf[ (maindf.yearQuarter == yearQuarter) & (maindf.vintage == vintage) ]
-    excelLinks = NIPAHistExcelLinks( dfline , cfg['beaUrl'] )['main']
-    dfExcelSelected = excelLinks[ excelLinks.Title.str.contains('Section {}'.format(sectionNum)) ]
-    
-    output = pd.DataFrame()
-    if dfExcelSelected.empty:
-       print("Table does not exist in time period!")
-       return( output )
-    
-    #for now, will only get the Section x data, not the Section x (Pre) (pre 1969) that might exist
-    #to do: when (pre) exist open and concatenate it.
-    exLink = excelLinks[ excelLinks.Title == 'Section {}'.format(sectionNum) ].excelLink.tolist()[0]
-    excelAll = pd.read_excel( exLink, None)  #get all tables
-    
-    table = excelAll[ list( filter( r.match, excelAll.keys()) )[0] ]
-    
-    #get metadata (date range for now):
-    #r2 = re.compile('.* data from .* To .*'.lower())
-    #vv = table.iloc[:,0].astype(str).str.lower().tolist()
-    #dates = list( filter( lambda x: r2.match(x), vv  ) )[0]
-    
-    #clean up the table.
-    table = table[ table.iloc[:,2].notna() ].iloc[:,2:]
-    table = table.rename(columns={ table.columns[0]: 'variable' }).set_index('variable')
-    table = table.apply(pd.to_numeric, errors='coerce')
-    table = table.dropna( how = 'all' ) 
-    
-    #put dates
-    Nobs = table.shape[1]
-    if timeUnit == 'Q':
-      ffreq = 'QS' #else will end a quarter before...
-    
-    dateRange = list( pd.date_range(end=yearQuarter.replace(', ',''), periods=Nobs,freq=ffreq ) )
-    dates = pd.PeriodIndex( dateRange, freq = timeUnit)
-    
-    table.columns = dates
-    return(table)
-
+#def getHistTable( tableName, yearQuarter, vintage = "Third", timeUnit = "Q", cfg = cfg ):
+#    sectionNum = tableName[1]
+#    r = re.compile( tableName.replace('T','') + '.*' + timeUnit )  #will search for sheet names with this regex.
+#    maindf  = urlNIPAHistQYVintage( cfg['NIPAHistUrl'], cfg['histUrl'] )
+#    dfline  = maindf[ (maindf.yearQuarter == yearQuarter) & (maindf.vintage == vintage) ]
+#    excelLinks = NIPAHistExcelLinks( dfline , cfg['beaUrl'] )['main']
+#    dfExcelSelected = excelLinks[ excelLinks.Title.str.contains('Section {}'.format(sectionNum)) ]
+#    
+#    output = pd.DataFrame()
+#    if dfExcelSelected.empty:
+#       print("Table does not exist in time period!")
+#       return( output )
+#    
+#    #for now, will only get the Section x data, not the Section x (Pre) (pre 1969) that might exist
+#    #to do: when (pre) exist open and concatenate it.
+#    exLink = excelLinks[ excelLinks.Title == 'Section {}'.format(sectionNum) ].excelLink.tolist()[0]
+#    excelAll = pd.read_excel( exLink, None)  #get all tables
+#    
+#    table = excelAll[ list( filter( r.match, excelAll.keys()) )[0] ]
+#    
+#    #get metadata (date range for now):
+#    #r2 = re.compile('.* data from .* To .*'.lower())
+#    #vv = table.iloc[:,0].astype(str).str.lower().tolist()
+#    #dates = list( filter( lambda x: r2.match(x), vv  ) )[0]
+#    
+#    #clean up the table.
+#    table = table[ table.iloc[:,2].notna() ].iloc[:,2:]
+#    table = table.rename(columns={ table.columns[0]: 'variable' }).set_index('variable')
+#    table = table.apply(pd.to_numeric, errors='coerce')
+#    table = table.dropna( how = 'all' ) 
+#    
+#    #put dates
+#    Nobs = table.shape[1]
+#    if timeUnit == 'Q':
+#      ffreq = 'QS' #else will end a quarter before...
+#    
+#    dateRange = list( pd.date_range(end=yearQuarter.replace(', ',''), periods=Nobs,freq=ffreq ) )
+#    dates = pd.PeriodIndex( dateRange, freq = timeUnit)
+#    
+#    table.columns = dates
+#    return(table)
+#
 
 def getAndSaveData(range,filename,excelTables, quiet = True):
     tableRange = excelTables.iloc[range]
@@ -215,7 +211,7 @@ def getAndSaveData(range,filename,excelTables, quiet = True):
         print( "finished loading!")
         print(range)
 
-def formatBeaRaw( raw, outputFormat = 'dict', save = 'no', saveAs = '' ):
+def formatBeaRaw( rawIn, outputFormat = 'dict', save = 'no', saveAs = '' ):
     '''
       Raw is the pandas reading of the BEA excel table (has all sheets).
       output formats (note, all compressed outputs are of json format):  #TODO: separate format (dict/json vs pandas) from compression
@@ -233,16 +229,16 @@ def formatBeaRaw( raw, outputFormat = 'dict', save = 'no', saveAs = '' ):
     '''
     #fix table names:
     newRawKeys = dict(zip(
-        list(raw),
-        [re.sub(" |-", "_", entry).replace('Qtr', 'Q').replace('Month', 'M').replace('Ann', 'A').strip() for entry in list(raw)]
+        list(rawIn),
+        [re.sub(" |-", "_", entry).replace('Qtr', 'Q').replace('Month', 'M').replace('Ann', 'A').strip() for entry in list(rawIn)]
     ))
-    raw = { newRawKeys[entry] : raw.pop(entry)   for entry in newRawKeys  }
+    raw = { newRawKeys[entry] : rawIn[entry]   for entry in newRawKeys  }
     Results = {}
     for x in raw:
         
         if x == 'Contents':
             continue 
-
+        
         Results[x] = {}
         table = raw[x].copy()
         #fix the case when the quarter or month is listed on a separated line
@@ -292,7 +288,7 @@ def formatBeaRaw( raw, outputFormat = 'dict', save = 'no', saveAs = '' ):
         if outputFormat == 'dictPandas':  #TODO: just reshape the above data (so, assure numeric) data if not returning pandas
             outData = dataTab
         outData.rename(index=str, columns={'Line': 'LineNumber'},inplace=True)
-        outData.insert(0, 'TableName', re.sub('-.$|Qrt$|Annual|A$|M$','',x).strip(" ") )
+        outData.insert(0, 'TableName', re.sub('_.$|Qrt$|Annual|A$|M$','',x).strip(" ") )
         #outData.insert(len(outData.keys()),'UNIT_MULT',0)    #TODO check T10101, always 0, as in many other cases.  Bit costly to save these UNIT_Mult, CL data.
         #outData.insert(len(outData.keys()), 'CL_UNIT', table.iloc[0,0])  # TODO check, T10101: CL_UNIT Percent change, annual rate
         #outData.insert(len(outData.keys()), 'CL_UNIT', 0)  # check   TODO: this is missing example of T10101: METRIC_NAME Fisher Quantity Index
@@ -433,9 +429,14 @@ def formatBeaRaw( raw, outputFormat = 'dict', save = 'no', saveAs = '' ):
 
 
 if __name__ == '__main__':
-    #dfUrlQYVintage = NIPAHistUrlOfQYVintage()
+    #cfg = {
+    #   'beaUrl'   : 'https://apps.bea.gov/',
+    #   'histUrl'  : 'https://apps.bea.gov/histdata/',
+    #   'NIPAHistUrl'  : 'https://apps.bea.gov/histdata/histChildLevels.cfm?HMI=7',
+    #}
+    #dfUrlQYVintage = urlNIPAHistQYVintage()
     #LineOfdfUrlQYVintage = dfUrlQYVintage.to_dict('records')[line]
-    #out = NIPAHistUrlOfQYVintageTypeSection( LineOfdfUrlQYVintage )
+    #out = urlNIPAHistQYVintageMainOrUnderlSection( LineOfdfUrlQYVintage )
     #
     #excelTables = getAllLinksToHistTables()
     #excelTables = excelTables[['index', 'yearQuarter', 'vintage', 'Title', 'Details', 'type', 'releaseDate', 'vintageLink', 'excelLink']]
@@ -453,18 +454,25 @@ if __name__ == '__main__':
 
 
     #get downloaded data, format and save
-    filename = 'beafullfetchpy/beaData/beaHist511'
-    with open(filename,'rb') as file_object:
-        raw_data = file_object.read()
-    beaHistRaw = pickle.loads(raw_data)
-    outFilename = 'beafullfetchpy/beaDataClean/' +  re.sub("[\w]*/","",filename) + "_"  #TODO: replace BeaHistn by vintage date
-    raw = beaHistRaw[0]['data']
-    tab = formatBeaRaw(raw, outputFormat='dictPandas', save='no', saveAs='')
+hfail = []
+for k in range(260,4424):
+    try:
+        filename = 'beafullfetchpy/beaData/beaHist' +str(k)
+        with open(filename,'rb') as file_object:
+            raw_data = file_object.read()
+        
+        beaHistRaw = pickle.loads(raw_data)
+        outFilename = 'beafullfetchpy/beaDataClean/' +  re.sub("[\w]*/","",filename) + "_"  #TODO: replace BeaHistn by vintage date
+        raw = beaHistRaw[0]['data']
+        tab = formatBeaRaw(raw, outputFormat='gzip', save='tablewise', saveAs=outFilename)
+    except:
+        hfail.append(k)
+
     print(tab.keys())
     print(tab[list(tab.keys())[0]]['Data'].head())
     print(tab[list(tab.keys())[1]]['Data'].head())
 
 
 
-    from os import listdir
-#case 510
+    
+#case 510, 511
