@@ -5,7 +5,6 @@ import bs4 as bs                 # scraping websites
 import urllib.request            # work/connect to url    
 import re                        # regular expression
 from datetime import datetime
-
 import json
 import gzip
 import sys
@@ -249,7 +248,7 @@ def formatBeaRaw( raw, outputFormat = 'dict', save = 'no', saveAs = '' ):
         #fix the case when the quarter or month is listed on a separated line
         if table.iloc[7,:].isna()[0] == True and table.iloc[7,:].isna()[1] == True:
             freq = x[-1]  #Q, A, or M
-            table.iloc[6, 3:] = [str(x[0]) + freq + str(x[1]) for x in zip(table.iloc[6, 3:], table.iloc[7, 3:])]
+            table.iloc[6, 3:] = [ (str(x[0]) + freq + str(x[1])).replace('.0','') for x in zip(table.iloc[6, 3:], table.iloc[7, 3:])]
             table.drop(table.index[7],inplace = True)
         #Results -- Data, Statistic (NIPA Table), UTCProductionTime (now), Notes, and Dimensions ##########################
         #
@@ -454,7 +453,7 @@ if __name__ == '__main__':
 
 
     #get downloaded data, format and save
-    filename = 'beafullfetchpy/beaData/beaHist3000'
+    filename = 'beafullfetchpy/beaData/beaHist511'
     with open(filename,'rb') as file_object:
         raw_data = file_object.read()
     beaHistRaw = pickle.loads(raw_data)
@@ -465,7 +464,7 @@ if __name__ == '__main__':
     print(tab[list(tab.keys())[0]]['Data'].head())
     print(tab[list(tab.keys())[1]]['Data'].head())
 
-    [str(x[0]) + 'M' + str(x[1]) for x in zip(v.iloc[6, 0:], v.iloc[7, 0:])]
 
 
-#case 310
+    from os import listdir
+#case 510
