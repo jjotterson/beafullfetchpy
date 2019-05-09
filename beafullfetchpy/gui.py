@@ -11,7 +11,15 @@ class beaGuiModel:
     def set_exitProcess(self, exitProcess=0):
         self.exitProcess = exitProcess
        
-    
+
+
+def keep_flat(event):       # on click,
+    #print(event)
+    #print("this is the widget")
+    #print(event.widget)
+    event.widget.config(relief=tk.FLAT) # enforce an option
+
+
 class beaGuiView(tk.Frame):
     def __init__(self, model, master=None):
         super().__init__(master)   #TODO: remove and put in control? is this even possible?
@@ -22,7 +30,12 @@ class beaGuiView(tk.Frame):
         self.MainContainers()
         self.mainPanel()
         self.sideNav()
-    
+        self.master.bind('<Button-1>', self.keep_flat)
+    def keep_flat(self,event):       # on click,
+        #print(event)
+        #print("this is the widget")
+        #print(event.widget)
+        event.widget.config(relief=tk.FLAT) # enforce an option
     def Appconfigs(self, title="BEA Full Data Fetch (beafullfetch)"):
         self.master.title(title)
         # self.master.option_add('*Font','Times')
@@ -33,7 +46,6 @@ class beaGuiView(tk.Frame):
             self.master, width=400, height=50, pady=3, padx=1, bd=2, relief=tk.FLAT,  background='#272822')   
         self.frameSideNav = tk.Frame(
             self.master, width=400, height=50, pady=3, padx=1, bd=2,  background='#48483E')
-        
         # layout of the main containers
         #root.grid_rowconfigure(1, weight=1)
         #root.grid_columnconfigure(0, weight=1)
@@ -66,16 +78,26 @@ class beaGuiView(tk.Frame):
         btnCfg = dict(anchor=tk.W, relief = tk.FLAT,justify=tk.LEFT, background='#48483E', activebackground='#48483E',activeforeground='white',fg = 'white' )
         btnBaseGrid = dict(column=0, sticky='w',padx = 10, pady=10)
         #top buttons
-        self.btn_database = tk.Button(self.sidenav_topframe, text="Database", anchor=tk.W, relief = tk.FLAT,justify=tk.LEFT, background='#48483E',highlightbackground='#3E4149', activebackground='#48483E',activeforeground='white',fg = 'blue').grid(row=0,  **btnBaseGrid)
-        self.btn_database = tk.Button(self.sidenav_topframe, text="Add",      **btnCfg ).grid(row=1,  **btnBaseGrid)
-        self.btn_database = tk.Button(self.sidenav_topframe, text="Download", **btnCfg ).grid(row=2,  **btnBaseGrid)
-        self.btn_database = tk.Button(self.sidenav_topframe, text="Load",     **btnCfg ).grid(row=3,  **btnBaseGrid)  
-        self.btn_database = tk.Button(self.sidenav_topframe, text="Code",     **btnCfg ).grid(row=4,  **btnBaseGrid)
-        self.btn_database = tk.Button(self.sidenav_topframe, text="Code to Clipboard",  **btnCfg  ).grid(row=5,  **btnBaseGrid)
-        self.btn_database = tk.Button(self.sidenav_topframe, text="Help",     **btnCfg ).grid(row=6,  **btnBaseGrid)
+        self.btn_database = tk.Button(self.sidenav_topframe, text="Database", anchor=tk.W, relief = tk.FLAT,justify=tk.LEFT, background='#48483E',highlightbackground='#3E4149', activebackground='#48483E',activeforeground='white',fg = 'blue')
+        self.btn_add      = tk.Button(self.sidenav_topframe, text="Add",      **btnCfg )
+        self.btn_download = tk.Button(self.sidenav_topframe, text="Download", **btnCfg )
+        self.btn_load     = tk.Button(self.sidenav_topframe, text="Load",     **btnCfg )
+        self.btn_code     = tk.Button(self.sidenav_topframe, text="Code",     **btnCfg )
+        self.btn_cclip    = tk.Button(self.sidenav_topframe, text="Code to Clipboard",  **btnCfg  )
+        self.btn_help     = tk.Button(self.sidenav_topframe, text="Help",     **btnCfg )
         #bottom button
-        self.btn_database = tk.Button(self.sidenav_bottomframe, text="About", **btnCfg  ).grid(row=8,  **btnBaseGrid)
-
+        self.btn_about    = tk.Button(self.sidenav_bottomframe, text="About", **btnCfg  )
+        #geometry:  
+        self.btn_database.grid(row=0,  **btnBaseGrid)
+        self.btn_add.grid(row=1,  **btnBaseGrid)    
+        self.btn_download.grid(row=2,  **btnBaseGrid)
+        self.btn_load.grid(row=3,  **btnBaseGrid)     
+        self.btn_code.grid(row=4,  **btnBaseGrid)   
+        self.btn_cclip.grid(row=5,  **btnBaseGrid)  
+        self.btn_help.grid(row=6,  **btnBaseGrid)   
+        #bottom button
+        self.btn_about.grid(row=0,  **btnBaseGrid)  
+        
 
 
 
@@ -88,12 +110,17 @@ class beaGuiControler:
        self.get_ctrl()                     #run the Controls that populate entries in view from model and load button functions.
        self.ctrl_quit = self.root.destroy
        self.sessionData = 0
+    # bind the application to left mouse click
     ## contorl part of beaGuiView #################################################
-    def get_ctrl(self):  
-         pass
-    #    self.app.btn_name.config( command = self.btn_nameFun  )
+    def get_ctrl(self): 
+        #all buttons are flat when clicked 
+        self.app.btn_database.config( command = self.btn_databaseFun  )
     #    self.app.btn_commit.config(command = self.btn_commitFun )
     #    self.app.btn_exit.config(  command = self.btn_exitFun )
+    
+    def btn_databaseFun(self):
+        print("database button clicked")
+            
     #def btn_exitFun(self):
     #    self.model.exitProcess = 1
     #    self.ctrl_quit()  #need the () else it is a function 
@@ -114,6 +141,9 @@ if __name__ == '__main__':
     c = beaGuiControler()
     c.app.mainloop()
     x = c.sessionData
+
+
+
 
 
 from PIL import ImageTk, Image
