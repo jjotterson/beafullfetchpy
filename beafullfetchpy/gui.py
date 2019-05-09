@@ -13,13 +13,6 @@ class beaGuiModel:
        
 
 
-def keep_flat(event):       # on click,
-    #print(event)
-    #print("this is the widget")
-    #print(event.widget)
-    event.widget.config(relief=tk.FLAT) # enforce an option
-
-
 class beaGuiView(tk.Frame):
     def __init__(self, model, master=None):
         super().__init__(master)   #TODO: remove and put in control? is this even possible?
@@ -45,7 +38,7 @@ class beaGuiView(tk.Frame):
         self.frameMain = tk.Frame(
             self.master, width=400, height=50, pady=3, padx=1, bd=2, relief=tk.FLAT,  background='#272822')   
         self.frameSideNav = tk.Frame(
-            self.master, width=400, height=50, pady=3, padx=1, bd=2,  background='#48483E')
+            self.master, width=400, height=50, pady=3, padx=1, bd=2,  background='#48483E')  #rgb 72,72,62
         # layout of the main containers
         #root.grid_rowconfigure(1, weight=1)
         #root.grid_columnconfigure(0, weight=1)
@@ -76,28 +69,38 @@ class beaGuiView(tk.Frame):
         self.sidenav_bottomframe.pack(side=tk.BOTTOM)
         #
         btnCfg = dict(anchor=tk.W, relief = tk.FLAT,justify=tk.LEFT, background='#48483E', activebackground='#48483E',activeforeground='white',fg = 'white' )
-        btnBaseGrid = dict(column=0, sticky='w',padx = 10, pady=10)
+        btnBaseGrid = dict(column=0, sticky='w',padx = 0, pady=10)
         #top buttons
         self.btn_database = tk.Button(self.sidenav_topframe, text="Database", anchor=tk.W, relief = tk.FLAT,justify=tk.LEFT, background='#48483E',highlightbackground='#3E4149', activebackground='#48483E',activeforeground='white',fg = 'blue')
         self.btn_add      = tk.Button(self.sidenav_topframe, text="Add",      **btnCfg )
         self.btn_download = tk.Button(self.sidenav_topframe, text="Download", **btnCfg )
         self.btn_load     = tk.Button(self.sidenav_topframe, text="Load",     **btnCfg )
         self.btn_code     = tk.Button(self.sidenav_topframe, text="Code",     **btnCfg )
-        self.btn_cclip    = tk.Button(self.sidenav_topframe, text="Code to Clipboard",  **btnCfg  )
-        self.btn_help     = tk.Button(self.sidenav_topframe, text="Help",     **btnCfg )
-        #bottom button
-        self.btn_about    = tk.Button(self.sidenav_bottomframe, text="About", **btnCfg  )
+        #self.btn_cclip    = tk.Button(self.sidenav_topframe, text="Code to Clipboard",  **btnCfg  )
+        self.btn_help     = tk.Button(self.sidenav_bottomframe, text="Help",     **btnCfg )
         #geometry:  
         self.btn_database.grid(row=0,  **btnBaseGrid)
         self.btn_add.grid(row=1,  **btnBaseGrid)    
         self.btn_download.grid(row=2,  **btnBaseGrid)
         self.btn_load.grid(row=3,  **btnBaseGrid)     
         self.btn_code.grid(row=4,  **btnBaseGrid)   
-        self.btn_cclip.grid(row=5,  **btnBaseGrid)  
-        self.btn_help.grid(row=6,  **btnBaseGrid)   
-        #bottom button
-        self.btn_about.grid(row=0,  **btnBaseGrid)  
-        
+        #self.btn_cclip.grid(row=5,  **btnBaseGrid)  
+        self.btn_help.grid(row=0,  **btnBaseGrid)    
+        #image - if error, need to run a case without error, close all windows and then re-run.
+        self.img_btn_database = tk.PhotoImage(file = "beafullfetchpy/static/imgs/database-solid.gif")
+        self.img_btn_add      = tk.PhotoImage(file = "beafullfetchpy/static/imgs/plus-square-solid.gif")
+        self.img_btn_download = tk.PhotoImage(file = "beafullfetchpy/static/imgs/download-solid.gif")
+        self.img_btn_load     = tk.PhotoImage(file = "beafullfetchpy/static/imgs/arrow-circle-down-solid.gif")
+        self.img_btn_code     = tk.PhotoImage(file = "beafullfetchpy/static/imgs/code-solid.gif")
+        #self.img_btn_cclip    = tk.PhotoImage(file = "beafullfetchpy/static/imgs/test.gif")
+        self.img_btn_help     = tk.PhotoImage(file = "beafullfetchpy/static/imgs/info-circle-solid.gif")
+        self.btn_database.config(image=self.img_btn_database,width="50",height="24" )
+        self.btn_add     .config(image=self.img_btn_add     ,width="50",height="24" )
+        self.btn_download.config(image=self.img_btn_download,width="50",height="24" )
+        self.btn_load    .config(image=self.img_btn_load    ,width="50",height="24" )
+        self.btn_code    .config(image=self.img_btn_code    ,width="50",height="24" )
+        #self.btn_cclip   .config(image=self.img_btn_cclip   ,width="50",height="24" )
+        self.btn_help    .config(image=self.img_btn_help    ,width="50",height="24" )
 
 
 
@@ -164,5 +167,41 @@ def svgPhotoImage(file_path_name):
 
 
 
+from tkinter import *  
+from PIL import ImageTk,Image  
+root = Tk()  
+canvas = Canvas(root, width = 300, height = 300)  
+canvas.pack()  
+#img = ImageTk.PhotoImage(Image.open("beafullfetchpy/ball.png"))  
+img = tk.PhotoImage(file = "beafullfetchpy/test.gif")  
+canvas.create_image(20, 20, anchor=NW, image=img)  
+root.mainloop() 
+
+
+
+
 https://cairosvg.org/
 https://stackoverflow.com/questions/6589358/convert-svg-to-png-in-python
+
+
+
+from Tkinter import *
+root=Tk()
+b=Button(root,justify = LEFT)
+photo=PhotoImage(file="beafullfetchpy/test.gif")
+b.config(image=photo,width="50",height="50")
+b.pack(side=LEFT)
+root.mainloop()
+
+
+
+from Tkinter import *
+class fe:
+    def __init__(self,master):
+      self.b=Button(master,justify = LEFT)
+      self.photo=PhotoImage(file="beafullfetchpy/test.gif")
+      self.b.config(image=self.photo,width="10",height="10")
+      self.b.pack(side=LEFT)
+root = Tk()
+front_end=fe(root)
+root.mainloop()
