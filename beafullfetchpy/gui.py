@@ -71,36 +71,37 @@ class beaGuiView(tk.Frame):
         btnCfg = dict(anchor=tk.W, relief = tk.FLAT,justify=tk.LEFT, background='#48483E', activebackground='#48483E',activeforeground='white',fg = 'white' )
         btnBaseGrid = dict(column=0, sticky='w',padx = 0, pady=10)
         #top buttons
-        self.btn_database = tk.Button(self.sidenav_topframe, text="Database", anchor=tk.W, relief = tk.FLAT,justify=tk.LEFT, background='#48483E',highlightbackground='#3E4149', activebackground='#48483E',activeforeground='white',fg = 'blue')
-        self.btn_add      = tk.Button(self.sidenav_topframe, text="Add",      **btnCfg )
-        self.btn_download = tk.Button(self.sidenav_topframe, text="Download", **btnCfg )
-        self.btn_load     = tk.Button(self.sidenav_topframe, text="Load",     **btnCfg )
-        self.btn_code     = tk.Button(self.sidenav_topframe, text="Code",     **btnCfg )
-        #self.btn_cclip    = tk.Button(self.sidenav_topframe, text="Code to Clipboard",  **btnCfg  )
-        self.btn_help     = tk.Button(self.sidenav_bottomframe, text="Help",     **btnCfg )
+        self.btn_database = tk.Button(self.sidenav_topframe,    text="Database", **btnCfg )
+        self.btn_add      = tk.Button(self.sidenav_topframe,    text="Add",      **btnCfg )
+        self.btn_download = tk.Button(self.sidenav_topframe,    text="Download", **btnCfg )
+        self.btn_load     = tk.Button(self.sidenav_topframe,    text="Load",     **btnCfg )
+        self.btn_code     = tk.Button(self.sidenav_topframe,    text="Code",     **btnCfg )
+        self.btn_help     = tk.Button(self.sidenav_topframe,    text="Help",     **btnCfg )
+        self.btn_settings = tk.Button(self.sidenav_bottomframe, text="Settings", **btnCfg )
         #geometry:  
         self.btn_database.grid(row=0,  **btnBaseGrid)
-        self.btn_add.grid(row=1,  **btnBaseGrid)    
+        self.btn_add     .grid(row=1,  **btnBaseGrid)    
         self.btn_download.grid(row=2,  **btnBaseGrid)
-        self.btn_load.grid(row=3,  **btnBaseGrid)     
-        self.btn_code.grid(row=4,  **btnBaseGrid)   
-        #self.btn_cclip.grid(row=5,  **btnBaseGrid)  
-        self.btn_help.grid(row=0,  **btnBaseGrid)    
+        self.btn_load    .grid(row=3,  **btnBaseGrid)     
+        self.btn_code    .grid(row=4,  **btnBaseGrid)   
+        self.btn_help    .grid(row=5,  **btnBaseGrid)    
+        self.btn_settings.grid(row=0,  **btnBaseGrid)    
         #image - if error, need to run a case without error, close all windows and then re-run.
         self.img_btn_database = tk.PhotoImage(file = "beafullfetchpy/static/imgs/database-solid.gif")
         self.img_btn_add      = tk.PhotoImage(file = "beafullfetchpy/static/imgs/plus-square-solid.gif")
         self.img_btn_download = tk.PhotoImage(file = "beafullfetchpy/static/imgs/download-solid.gif")
         self.img_btn_load     = tk.PhotoImage(file = "beafullfetchpy/static/imgs/arrow-circle-down-solid.gif")
         self.img_btn_code     = tk.PhotoImage(file = "beafullfetchpy/static/imgs/code-solid.gif")
-        #self.img_btn_cclip    = tk.PhotoImage(file = "beafullfetchpy/static/imgs/test.gif")
         self.img_btn_help     = tk.PhotoImage(file = "beafullfetchpy/static/imgs/info-circle-solid.gif")
+        self.img_btn_settings = tk.PhotoImage(file = "beafullfetchpy/static/imgs/cog-solid.gif")
+        
         self.btn_database.config(image=self.img_btn_database,width="50",height="24" )
         self.btn_add     .config(image=self.img_btn_add     ,width="50",height="24" )
         self.btn_download.config(image=self.img_btn_download,width="50",height="24" )
         self.btn_load    .config(image=self.img_btn_load    ,width="50",height="24" )
         self.btn_code    .config(image=self.img_btn_code    ,width="50",height="24" )
-        #self.btn_cclip   .config(image=self.img_btn_cclip   ,width="50",height="24" )
         self.btn_help    .config(image=self.img_btn_help    ,width="50",height="24" )
+        self.btn_settings.config(image=self.img_btn_settings,width="50",height="24" )
 
 
 
@@ -113,29 +114,39 @@ class beaGuiControler:
        self.get_ctrl()                     #run the Controls that populate entries in view from model and load button functions.
        self.ctrl_quit = self.root.destroy
        self.sessionData = 0
-    # bind the application to left mouse click
     ## contorl part of beaGuiView #################################################
     def get_ctrl(self): 
         #all buttons are flat when clicked 
         self.app.btn_database.config( command = self.btn_databaseFun  )
-    #    self.app.btn_commit.config(command = self.btn_commitFun )
-    #    self.app.btn_exit.config(  command = self.btn_exitFun )
+        self.app.btn_add     .config( command = self.btn_addFun       )      
+        self.app.btn_download.config( command = self.btn_downloadFun  )
+        self.app.btn_load    .config( command = self.btn_loadFun      )    
+        self.app.btn_code    .config( command = self.btn_codeFun      )    
+        self.app.btn_help    .config( command = self.btn_helpFun      )    
+        self.app.btn_settings.config( command = self.btn_settingsFun  )    
     
     def btn_databaseFun(self):
         print("database button clicked")
-            
-    #def btn_exitFun(self):
-    #    self.model.exitProcess = 1
-    #    self.ctrl_quit()  #need the () else it is a function 
-    #
-    #def btn_commitFun(self):
-    #    #get data typed in the "entry" fields - data typed in
-    #    self.model.notify = self.app.mailLog.get()
-    #    self.model.request = self.app.approvalLog.get()
-    #    self.model.emailText = self.app.emailText.get("1.0",tk.END)
-    #    self.ctrl_quit()
-    ## end of view control part ###################################################    
-    ## controls of git run itself: ################################################
+
+    def btn_addFun(self): 
+        print("addFun      button clicke")
+
+    def btn_downloadFun(self): 
+        print("downloadFun button clicke")
+
+    def btn_loadFun(self): 
+        print("loadFun     button clicke")
+
+    def btn_codeFun(self): 
+        print("codeFun     button clicke")
+
+    def btn_helpFun(self): 
+        print("helpFun     button clicke")     
+
+    def btn_settingsFun(self): 
+        print("settingsFun     button clicke")    
+    ## end of view control part ################################################    
+    ## controls :               ################################################
 
 
 
