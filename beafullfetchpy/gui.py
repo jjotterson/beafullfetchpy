@@ -66,7 +66,7 @@ class beaGuiView(tk.Frame):
         btnCfg = dict(anchor=tk.W, relief = tk.FLAT,justify=tk.LEFT, background='#48483E', activebackground='#48483E',activeforeground='white',fg = 'white' )
         btnBaseGrid = dict(column=0, sticky='w',padx = 10, pady=10)
         #top buttons
-        self.btn_database = tk.Button(self.sidenav_topframe, text="Database", **btnCfg ).grid(row=0,  **btnBaseGrid)
+        self.btn_database = tk.Button(self.sidenav_topframe, text="Database", anchor=tk.W, relief = tk.FLAT,justify=tk.LEFT, background='#48483E',highlightbackground='#3E4149', activebackground='#48483E',activeforeground='white',fg = 'blue').grid(row=0,  **btnBaseGrid)
         self.btn_database = tk.Button(self.sidenav_topframe, text="Add",      **btnCfg ).grid(row=1,  **btnBaseGrid)
         self.btn_database = tk.Button(self.sidenav_topframe, text="Download", **btnCfg ).grid(row=2,  **btnBaseGrid)
         self.btn_database = tk.Button(self.sidenav_topframe, text="Load",     **btnCfg ).grid(row=3,  **btnBaseGrid)  
@@ -87,6 +87,7 @@ class beaGuiControler:
        self.app = beaGuiView(self.model,master=self.root)
        self.get_ctrl()                     #run the Controls that populate entries in view from model and load button functions.
        self.ctrl_quit = self.root.destroy
+       self.sessionData = 0
     ## contorl part of beaGuiView #################################################
     def get_ctrl(self):  
          pass
@@ -105,28 +106,6 @@ class beaGuiControler:
     #    self.ctrl_quit()
     ## end of view control part ###################################################    
     ## controls of git run itself: ################################################
-    def postView(self):
-        self.quitGit()
-        self.updateModelEndRun()
-        self.exitPython()  #check if want to do this.
-    def quitGit(self):
-        if self.model.exitProcess == 1:
-            sys.exit('Pre-Commit Hook: Commit Ended by User')
-            sys.exit(0)
-    def updateModelEndRun(self):  #TODO: move this to the Model
-        configData = {}
-        with open(c.model.configFile,'r') as hookconfig:
-            configData = json.load(hookconfig)
-         
-        configData['notify']     = c.model.notify
-        configData['request']    = c.model.request
-        configData['emailText']  = c.model.emailText
-        
-        with open(c.model.configFile, 'w') as hookconfig:
-            json.dump(configData, hookconfig)           
-    def exitPython(self):  
-        #sys.exit(0)
-        print("****** End of Pre-Commit Hook ******", "\n")
 
 
 
@@ -134,10 +113,26 @@ class beaGuiControler:
 if __name__ == '__main__':
     c = beaGuiControler()
     c.app.mainloop()
-    c.postView()
+    x = c.sessionData
+
+
+from PIL import ImageTk, Image
+def svgPhotoImage(file_path_name):
+        import rsvg, cairo
+        "Returns a ImageTk.PhotoImage object represeting the svg file"
+        # Based on pygame.org/wiki/CairoPygame and http://bit.ly/1hnpYZY
+        svg = rsvg.Handle(file=file_path_name)
+        width, height = svg.get_dimension_data()[:2]
+        surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, int(width), int(height))
+        context = cairo.Context(surface)
+        # context.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
+        svg.render_cairo(context)
+        tk_image = ImageTk.PhotoImage('RGBA')
+        image = Image.frombuffer('RGBA', (width, height), surface.get_data(), 'raw', 'BGRA', 0, 1)
+        tk_image.paste(image)
+        return (tk_image)
 
 
 
-
-
-
+https://cairosvg.org/
+https://stackoverflow.com/questions/6589358/convert-svg-to-png-in-python
