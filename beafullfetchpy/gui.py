@@ -7,13 +7,62 @@ import re
 
 class beaGuiModel:  
     def __init__(self,exitProcess=0):  
-        pass
+        self.getLicenses()
+        self.getHelp()
     def set_exitProcess(self, exitProcess=0):
         self.exitProcess = exitProcess
-       
+    def getLicenses(self):
+        self.licenses = licenses()
+    def getHelp(self):
+        self.help = helpIcons()
+
+def licenses():       
+    licenseDict = '''
+   beafullfetchpy is a python program written to get data from the Bureau of Economic 
+   Analysis (BEA) in a programmatic way (ie, via APIs). The package was written 
+   by James Otterson - this package is distributed in the hope that it may be 
+   useful to some. The usual disclaimers apply (downloading and installing this 
+   software is at your own risk, and no support or guarantee is provided, I do not 
+   take liability and so on), but please let me know if you have any problems, 
+   suggestions, comments, etc.. 
+   
+   Licenses:
+    \u2022 Data used is sourced from the Bureau of Economic Analysis 
+      As stated on the Bureau of Economic Analysis website: 
+      - Unless stated otherwise, information published on this site is in the public 
+         domain and may be used or reproduced without specific permission. 
+      - As a U.S. government agency, BEA does not endorse or recommend any 
+        commercial products or services.                                            
+      - Any reference or link to the BEA Web site must not contain information 
+        that suggests an endorsement or recommendation by BEA.                  
+      For more information, see: 
+       https://www.bea.gov/help/guidelines-for-citing-bea  
+    
+    \u2022 Font Awesome Free License can be found here:  
+      https://fontawesome.com/license/free 
+    
+    \u2022 beafullfetchpy  
+      This package is under the MIT Free license
+''' 
+    return(licenseDict)
+
+def helpIcons():
+    helpText = '''
+   \u2022 Database Icon - use to navigate the BEA databases
+   \u2022 Add Icon  - use to restrict the dataset
+   \u2022 Download icon - use to save the selected data to a drive
+   \u2022 Load icon - use it to load the data to the current python sessions running the app
+   \u2022 Code icon - use it to get the code that can be used to load the data in a python section
+   \u2022 Settings icon - use it to manage your API Keys
+'''
+    return(helpText)
 
 
 class beaGuiView(tk.Frame):
+    '''
+      Fixes the overall geometry of the app.  Note: writing based mainly in pack not grid since the 
+      overall shape (vertical or horizontal blocks that fill the whole space) fits this framework better.
+    '''
     def __init__(self, model, master=None):
         super().__init__(master)   #TODO: remove and put in control? is this even possible?
         self.model = model         #TODO: maybe mediate all interaction vai Control
@@ -32,7 +81,7 @@ class beaGuiView(tk.Frame):
     def Appconfigs(self, title="BEA Full Data Fetch (beafullfetch)"):
         self.master.title(title)
         # self.master.option_add('*Font','Times')
-        self.master.geometry('{}x{}'.format(950, 600))
+        self.master.geometry('{}x{}'.format(950, 800))
     def MainContainers(self):
         # Main containers
         self.frameMain = tk.Frame(
@@ -49,14 +98,17 @@ class beaGuiView(tk.Frame):
     def mainPanel(self):
         # top frame widgets
         #
-        # Geometry
-        self.top_left = tk.Frame(self.frameMain,  width=550, height=190)
-        self.top_left.grid(row=0, column=0, sticky="ns")
+        # Geometry - cfgs and start right panel.
+        self.frameMain_left_cfg      = dict(master=self.frameMain,  width=550, height=190,background='#272822')
+        self.frameMain_left_packCfg  = dict(side=tk.LEFT, fill = tk.Y)
+        self.frameMain_right_cfg     = dict(master=self.frameMain,  width=550, height=190,background='#272822')
+        self.frameMain_right_packCfg = dict(side=tk.LEFT, fill = tk.Y)        
+        self.frameMain_left = tk.Frame(**self.frameMain_left_cfg)
+        self.frameMain_left.pack(**self.frameMain_left_packCfg)
         #
         # Content
-        tk.Label(self.top_left, text="Data Info", font=(self.fontsel, 20),
-                 anchor=tk.W, justify=tk.LEFT, fg = 'white',background='#272822' ).grid(row=0,  column=0, sticky='e')
-   
+        #tk.Label(self.top_left, text="Data Info", font=(self.fontsel, 20), anchor=tk.W, justify=tk.LEFT, fg = 'white',background='#272822' ).grid(row=0,  column=0, sticky='e')
+        
 
 
     def sideNav(self): #############################################################
@@ -102,7 +154,22 @@ class beaGuiView(tk.Frame):
         self.btn_code    .config(image=self.img_btn_code    ,width="50",height="24" )
         self.btn_help    .config(image=self.img_btn_help    ,width="50",height="24" )
         self.btn_settings.config(image=self.img_btn_settings,width="50",height="24" )
-
+  
+    def frameText(self,frameName,text,pack=True,cfg={}):
+        defaultCfg = dict(master=frameName,  width=550, height=10,background='#272822',fg="white") #NOTE: need same width as parent frame to allow fill x
+        if not cfg == {}:
+            defaultCfg.update(cfg)
+        self.frameMain_left_text = tk.Text( **defaultCfg  )
+        self.frameMain_left_text.pack(fill='x')
+        self.frameMain_left_text.insert(tk.INSERT,text)
+        self.frameMain_left_text.config(state=tk.DISABLED,relief = tk.FLAT)
+     
+    def frameTitle(self, frameName, title, pack = True):
+        self.title = tk.Label(frameName, text=title,font=(self.fontsel, 20),  anchor=tk.W, justify=tk.LEFT, fg = 'white',background='#272822' )
+        if pack :
+            self.title.pack(side=tk.TOP,fill=tk.X)
+        else:
+            self.title.grid(row=0,  column=0, sticky='e')
 
 
 class beaGuiControler:
@@ -138,13 +205,38 @@ class beaGuiControler:
         print("loadFun     button clicke")
 
     def btn_codeFun(self): 
+        self.clearUnpackFrameMainPackLeft()
+        self.app.frameTitle(self.app.frameMain_left, "Code to Extract Data")
         print("codeFun     button clicke")
 
     def btn_helpFun(self): 
+        self.clearUnpackFrameMainPackLeft()
+        self.app.frameTitle(self.app.frameMain_left, "Help")
+        self.app.frameText(self.app.frameMain_left,self.model.help)
+        self.app.frameTitle(self.app.frameMain_left, "About")
+        self.app.frameText(self.app.frameMain_left,self.model.licenses,cfg={'height':30})
+        print(type(self.model.licenses))
         print("helpFun     button clicke")     
 
     def btn_settingsFun(self): 
-        print("settingsFun     button clicke")    
+        print("settingsFun     button clicke")  
+    
+    def clearUnpackFrameMainPackLeft(self):
+        '''
+          Removes the frames in frameMain, clear them, loads leftFrame back  
+        '''
+        self.unpackFrameMainSubframes()
+        self.clearFrameMainSubframes()
+        self.app.frameMain_left.pack(**self.app.frameMain_left_packCfg)
+
+    def unpackFrameMainSubframes(self):
+        for child in self.app.frameMain.winfo_children():
+            child.pack_forget()
+    
+    def clearFrameMainSubframes(self):
+        for child in self.app.frameMain.winfo_children():
+            for subchild in child.winfo_children():
+                subchild.destroy()
     ## end of view control part ################################################    
     ## controls :               ################################################
 
@@ -159,7 +251,7 @@ if __name__ == '__main__':
 
 
 
-
+'''
 from PIL import ImageTk, Image
 def svgPhotoImage(file_path_name):
         import rsvg, cairo
@@ -216,3 +308,4 @@ class fe:
 root = Tk()
 front_end=fe(root)
 root.mainloop()
+'''
