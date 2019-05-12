@@ -1,4 +1,5 @@
 import tkinter as tk
+import tkinter.ttk as ttk
 import sys
 import os
 import subprocess
@@ -170,7 +171,49 @@ class beaGuiView(tk.Frame):
             self.title.pack(side=tk.TOP,fill=tk.X)
         else:
             self.title.grid(row=0,  column=0, sticky='e')
-
+    
+    def makeNotebook(self,frameName,todos):
+        '''
+           frameName - name of parent Frame
+           todos - dictionary(key, array) 
+             key - name of the sheet
+             array - a list of strings that will be logged
+        '''
+        #self.style = ttk.Style(self)  #ttk styling
+        #self.style.configure("TLabel", background='#272822',foreground = "white")
+        #self.style.configure("TNotebook", background='#272822',foreground = "white")
+        #self.style.configure("TNotebook.Tab", background='#48483E',foreground = "white")
+        #self.style.map("TNotebook.Tab", background=[("selected",'#272822' )], foreground=[("selected", '#272822')]);
+        #self.style.configure("TFrame", background='#272822',foreground = "white")
+        self.mygreen = "#d2ffd2"
+        self.myred = "#dd0202"
+        self.style = ttk.Style(self)        
+        self.style.theme_create( "Noteb", parent="alt", settings={
+                "TFrame"   : {"configure":{'background':'#272822','foreground':'white'}}, 
+                "TLabel"   : {"configure":{'background':'#272822','foreground':'white'}}, 
+                "TNotebook": {"configure": {"tabmargins": [0, 0, 0, 0], 'background':'#272822' ,'borderwidth':1} },
+                "TNotebook.Tab": {
+                    "configure": {"padding": [4, 4], "background": '#272822','foreground':'white' ,'underline':0},
+                    "map":       {"background": [("selected", '#48483E')],
+                                  "expand": [("selected", [0, 0, 0, 0])] } } } )
+        
+        self.style.theme_use("Noteb")  
+        self.notebook = ttk.Notebook(frameName, width=750, height=900)
+        self.label = ttk.Label(self)
+        for key, value in todos.items():
+            frame = ttk.Frame(self.notebook)
+            self.notebook.add(frame, text=key, underline=0,sticky=tk.NE + tk.SW)
+            for text in value:
+                ttk.Label(frame, text=text).pack(anchor=tk.W)
+        self.notebook.pack()
+        self.label.pack(anchor=tk.W)
+        self.notebook.enable_traversal()
+        self.notebook.bind("<<NotebookTabChanged>>", self.select_tab)
+    
+    def select_tab(self, event):
+        tab_id = self.notebook.select()
+        tab_name = self.notebook.tab(tab_id, "text")
+        
 
 class beaGuiControler:
     def __init__(self):
@@ -193,32 +236,53 @@ class beaGuiControler:
         self.app.btn_settings.config( command = self.btn_settingsFun  )    
     
     def btn_databaseFun(self):
+        self.clearUnpackFrameMainPackLeft()
+        self.app.frameTitle(self.app.frameMain_left, "Search Datasets")
         print("database button clicked")
 
     def btn_addFun(self): 
+        self.clearUnpackFrameMainPackLeft()
         print("addFun      button clicke")
 
     def btn_downloadFun(self): 
+        self.clearUnpackFrameMainPackLeft()
+        self.app.frameTitle(self.app.frameMain_left, "Download Data")
         print("downloadFun button clicke")
 
     def btn_loadFun(self): 
+        self.clearUnpackFrameMainPackLeft()
+        self.app.frameTitle(self.app.frameMain_left, "Load Data to Current Session")
         print("loadFun     button clicke")
 
     def btn_codeFun(self): 
         self.clearUnpackFrameMainPackLeft()
         self.app.frameTitle(self.app.frameMain_left, "Code to Extract Data")
+        todos = {
+                   "Home": ["Do the laundry \n there", "Go grocery shopping"],
+                   "Work": ["Install Python", "Learn Tkinter", "Reply emails"],
+                   "Vacations": ["Relax!"]
+         }
+        self.app.makeNotebook(self.app.frameMain_left,todos)
         print("codeFun     button clicke")
 
     def btn_helpFun(self): 
         self.clearUnpackFrameMainPackLeft()
-        self.app.frameTitle(self.app.frameMain_left, "Help")
-        self.app.frameText(self.app.frameMain_left,self.model.help)
-        self.app.frameTitle(self.app.frameMain_left, "About")
-        self.app.frameText(self.app.frameMain_left,self.model.licenses,cfg={'height':30})
+        #self.app.frameTitle(self.app.frameMain_left, "Help")
+        #self.app.frameText(self.app.frameMain_left,self.model.help)
+        #self.app.frameTitle(self.app.frameMain_left, "About")
+        #self.app.frameText(self.app.frameMain_left,self.model.licenses,cfg={'height':30})
+        todos = {
+                   "Help": [self.model.help],
+                   "About": [self.model.licenses]
+                  
+         }
+        self.app.makeNotebook(self.app.frameMain_left,todos)
         print(type(self.model.licenses))
         print("helpFun     button clicke")     
 
     def btn_settingsFun(self): 
+        self.clearUnpackFrameMainPackLeft()
+        self.app.frameTitle(self.app.frameMain_left, "Settings")
         print("settingsFun     button clicke")  
     
     def clearUnpackFrameMainPackLeft(self):
@@ -248,7 +312,7 @@ if __name__ == '__main__':
     c.app.mainloop()
     x = c.sessionData
 
-
+tk.Entry()
 
 
 '''
@@ -308,4 +372,136 @@ class fe:
 root = Tk()
 front_end=fe(root)
 root.mainloop()
+
+
+
+from tkinter import *
+
+root = Tk()
+
+height = 5
+width = 1
+for i in range(height): #Rows
+    for j in range(width): #Columns
+        b = Entry(root, text="",background='#48483E')
+        b.grid(row=i, column=j)
+
+mainloop()
+
+
+
+from tkinter import ttk # necessary for the Combobox widget
+
+# ... your code ...
+
+class Page_2(tk.Frame):
+
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.controller = controller
+        label = tk.Label(self, text="The payment options are displayed below", font=controller.title_font)
+        label.pack(side="top", fill="x", pady=10)
+
+        global df
+        tk.Label(self, text='Select option:').pack()
+        self.options = ttk.Combobox(self, values=list(df.columns))
+        self.options.pack()
+        tk.Button(self, text='Show option', command=self.show_option).pack()
+
+        self.text = tk.Text(self)
+        self.text.pack()
+
+        tk.Button(self, text="Restart",
+                  command=lambda: controller.show_frame("StartPage")).pack()
+
+    def show_option(self):
+        identifier = self.options.get() # get option
+        self.text.delete(1.0, tk.END)   # empty widget to print new text
+        self.text.insert(tk.END, str(df[identifier]))
+
+    
+
+
+
+
+import csv
+import sqlite3
+def main():
+    with open("contacts.csv", encoding="utf-8", newline="") as f, \
+         sqlite3.connect("contacts.db") as conn:
+        conn.execute("""CREATE TABLE contacts (
+                          last_name text,
+                          first_name text,
+                          email text,
+                          phone text
+                        )""")
+        conn.executemany("INSERT INTO contacts VALUES (?,?,?,?)",
+                         csv.reader(f))
+
+
+
+if __name__ == "__main__":
+    main()
+
+
+class NewContact(tk.Toplevel):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.contact = None
+        self.form = ContactForm(self)
+        self.btn_add = tk.Button(self, text="Confirm",
+                                 command=self.confirm)
+        self.form.pack(padx=10, pady=10)
+        self.btn_add.pack(pady=10)
+    
+    def confirm(self):
+        self.contact = self.form.get_details()
+        if self.contact:
+          self.destroy()
+    
+    def show(self):
+        self.grab_set()
+        self.wait_window()
+        return self.contact
+
+
+import tkinter as tk
+import tkinter.ttk as ttk
+
+class App(tk.Tk):
+ def __init__(self):
+        super().__init__()
+        todos = {
+                   "Home": ["Do the laundry", "Go grocery shopping"],
+                   "Work": ["Install Python", "Learn Tkinter", "Reply emails"],
+                   "Vacations": ["Relax!"]
+         }
+        self.notebook = ttk.Notebook(self, width=250, height=100)
+        self.label = ttk.Label(self)
+        for key, value in todos.items():
+            frame = ttk.Frame(self.notebook)
+            self.notebook.add(frame, text=key, underline=0,sticky=tk.NE + tk.SW)
+            for text in value:
+                ttk.Label(frame, text=text).pack(anchor=tk.W)
+        self.notebook.pack()
+        self.label.pack(anchor=tk.W)
+        self.notebook.enable_traversal()
+        self.notebook.bind("<<NotebookTabChanged>>", self.select_tab)
+ def select_tab(self, event):
+        tab_id = self.notebook.select()
+        tab_name = self.notebook.tab(tab_id, "text")
+        #text = "Your current selection is: {}".format(tab_name)
+        #self.label.config(text=text)
+
+
+
+
+if __name__ == "__main__":
+    app = App()
+    app.mainloop()
+
+
+
+
+
 '''
