@@ -66,9 +66,10 @@ class beaGuiView(tk.Frame):
     '''
     def __init__(self, model, master=None):
         super().__init__(master)   #TODO: remove and put in control? is this even possible?
-        self.model = model         #TODO: maybe mediate all interaction vai Control
+        self.model = model         #TODO: maybe mediate all interaction vai Control - no need for this so far
         self.fontsel = "Times"
         self.Appconfigs()
+        self.ttkStyles()    #load styling
         # self.create_widgets()
         self.MainContainers()
         self.mainPanel()
@@ -78,7 +79,8 @@ class beaGuiView(tk.Frame):
         #print(event)
         #print("this is the widget")
         #print(event.widget)
-        event.widget.config(relief=tk.FLAT) # enforce an option
+        event.widget.config(relief=tk.FLAT) # enforce an option, TODO: fix error notice "relief, unknown option" when using ttk
+        
     def Appconfigs(self, title="BEA Full Data Fetch (beafullfetch)"):
         self.master.title(title)
         # self.master.option_add('*Font','Times')
@@ -172,6 +174,24 @@ class beaGuiView(tk.Frame):
         else:
             self.title.grid(row=0,  column=0, sticky='e')
     
+    def ttkStyles(self):
+        self.style = ttk.Style(self)
+          
+        self.style.theme_create( "Noteb", parent="alt", 
+            settings={
+                "TFrame"   : {"configure":{'background':'#272822','foreground':'white'}}, 
+                "TLabel"   : {"configure":{'background':'#272822','foreground':'white'}}, 
+                "TNotebook": {"configure": {"tabmargins": [0, 0, 0, 0], 'background':'#272822' ,'borderwidth':1} },
+                "TNotebook.Tab": {
+                    "configure": {"padding": [4, 4], "background": '#272822','foreground':'white' ,'underline':0},
+                    "map":       {"background": [("selected", '#48483E')],
+                                  "expand": [("selected", [0, 0, 0, 0])] } 
+                } 
+            } 
+        )
+
+        self.style.theme_use("Noteb")   
+    
     def makeNotebook(self,frameName,todos):
         '''
            frameName - name of parent Frame
@@ -179,30 +199,7 @@ class beaGuiView(tk.Frame):
              key - name of the sheet
              array - a list of strings that will be logged
         '''
-        #self.style = ttk.Style(self)  #ttk styling
-        #self.style.configure("TLabel", background='#272822',foreground = "white")
-        #self.style.configure("TNotebook", background='#272822',foreground = "white")
-        #self.style.configure("TNotebook.Tab", background='#48483E',foreground = "white")
-        #self.style.map("TNotebook.Tab", background=[("selected",'#272822' )], foreground=[("selected", '#272822')]);
-        #self.style.configure("TFrame", background='#272822',foreground = "white")
-        try:
-            self.notebook.destroy()
-        except:
-            pass
         print('hello')
-        self.style = ttk.Style(self)
-        try:    #TODO: move this out, should only create the theme once.    
-            self.style.theme_create( "Noteb", parent="alt", settings={
-                    "TFrame"   : {"configure":{'background':'#272822','foreground':'white'}}, 
-                    "TLabel"   : {"configure":{'background':'#272822','foreground':'white'}}, 
-                    "TNotebook": {"configure": {"tabmargins": [0, 0, 0, 0], 'background':'#272822' ,'borderwidth':1} },
-                    "TNotebook.Tab": {
-                        "configure": {"padding": [4, 4], "background": '#272822','foreground':'white' ,'underline':0},
-                        "map":       {"background": [("selected", '#48483E')],
-                                      "expand": [("selected", [0, 0, 0, 0])] } } } )
-        except: 
-            pass
-        self.style.theme_use("Noteb")  
         self.notebook = ttk.Notebook(frameName, width=750, height=900)
         self.label = ttk.Label(self)
         for key, value in todos.items():
