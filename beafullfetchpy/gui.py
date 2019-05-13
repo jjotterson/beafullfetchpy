@@ -185,18 +185,23 @@ class beaGuiView(tk.Frame):
         #self.style.configure("TNotebook.Tab", background='#48483E',foreground = "white")
         #self.style.map("TNotebook.Tab", background=[("selected",'#272822' )], foreground=[("selected", '#272822')]);
         #self.style.configure("TFrame", background='#272822',foreground = "white")
-        self.mygreen = "#d2ffd2"
-        self.myred = "#dd0202"
-        self.style = ttk.Style(self)        
-        self.style.theme_create( "Noteb", parent="alt", settings={
-                "TFrame"   : {"configure":{'background':'#272822','foreground':'white'}}, 
-                "TLabel"   : {"configure":{'background':'#272822','foreground':'white'}}, 
-                "TNotebook": {"configure": {"tabmargins": [0, 0, 0, 0], 'background':'#272822' ,'borderwidth':1} },
-                "TNotebook.Tab": {
-                    "configure": {"padding": [4, 4], "background": '#272822','foreground':'white' ,'underline':0},
-                    "map":       {"background": [("selected", '#48483E')],
-                                  "expand": [("selected", [0, 0, 0, 0])] } } } )
-        
+        try:
+            self.notebook.destroy()
+        except:
+            pass
+        print('hello')
+        self.style = ttk.Style(self)
+        try:    #TODO: move this out, should only create the theme once.    
+            self.style.theme_create( "Noteb", parent="alt", settings={
+                    "TFrame"   : {"configure":{'background':'#272822','foreground':'white'}}, 
+                    "TLabel"   : {"configure":{'background':'#272822','foreground':'white'}}, 
+                    "TNotebook": {"configure": {"tabmargins": [0, 0, 0, 0], 'background':'#272822' ,'borderwidth':1} },
+                    "TNotebook.Tab": {
+                        "configure": {"padding": [4, 4], "background": '#272822','foreground':'white' ,'underline':0},
+                        "map":       {"background": [("selected", '#48483E')],
+                                      "expand": [("selected", [0, 0, 0, 0])] } } } )
+        except: 
+            pass
         self.style.theme_use("Noteb")  
         self.notebook = ttk.Notebook(frameName, width=750, height=900)
         self.label = ttk.Label(self)
@@ -209,7 +214,8 @@ class beaGuiView(tk.Frame):
         self.label.pack(anchor=tk.W)
         self.notebook.enable_traversal()
         self.notebook.bind("<<NotebookTabChanged>>", self.select_tab)
-    
+        print("end notebook blok")
+
     def select_tab(self, event):
         tab_id = self.notebook.select()
         tab_name = self.notebook.tab(tab_id, "text")
@@ -257,12 +263,6 @@ class beaGuiControler:
     def btn_codeFun(self): 
         self.clearUnpackFrameMainPackLeft()
         self.app.frameTitle(self.app.frameMain_left, "Code to Extract Data")
-        todos = {
-                   "Home": ["Do the laundry \n there", "Go grocery shopping"],
-                   "Work": ["Install Python", "Learn Tkinter", "Reply emails"],
-                   "Vacations": ["Relax!"]
-         }
-        self.app.makeNotebook(self.app.frameMain_left,todos)
         print("codeFun     button clicke")
 
     def btn_helpFun(self): 
