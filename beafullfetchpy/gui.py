@@ -10,12 +10,15 @@ class beaGuiModel:
     def __init__(self,exitProcess=0):  
         self.getLicenses()
         self.getHelp()
+        self.getHelpBEAAPI()
     def set_exitProcess(self, exitProcess=0):
         self.exitProcess = exitProcess
     def getLicenses(self):
         self.licenses = licenses()
     def getHelp(self):
         self.help = helpIcons()
+    def getHelpBEAAPI(self):
+        self.helpBEAAPI = helpBEAAPI()
 
 def licenses():       
     licenseDict = '''
@@ -57,6 +60,35 @@ def helpIcons():
    \u2022 Settings icon - use it to manage your API Keys
 '''
     return(helpText)
+
+def helpBEAAPI():
+    helpBEAAPI = '''
+    The userguide of the of BEA API can be found in:
+
+    https://apps.bea.gov/api/_pdf/bea_web_service_api_user_guide.pdf
+    
+    To access it and create an API Key, see:
+    
+    https://www.bea.gov/tools/   or  https://apps.bea.gov/API/signup/index.cfm
+    
+    Metadata:
+    there are types of meta: 
+      (1) GETDATASETLIST      top level, get the name of all tables.  
+      (2) GetParameterList    given a table, what parameters it needs to download (eg. NIPA)
+      (3) GetParameterValues  given a parameter of a table, which values you can choose. (eg. TableID of a NIPA table)
+
+    Sample python code (getting the list of datasets):
+    
+    import requests 
+    payload = {
+        'UserID':  ENTER YOUR BEA API Key Here, 
+        'method': 'GETDATASETLIST',
+        'ResultFormat': "JSON"
+    }
+    beaDatasets = requests.get( 'https://apps.bea.gov/api/data/', params = payload )
+
+'''
+    return(helpBEAAPI)
 
 
 class beaGuiView(tk.Frame):
@@ -157,7 +189,28 @@ class beaGuiView(tk.Frame):
         self.btn_code    .config(image=self.img_btn_code    ,width="50",height="24" )
         self.btn_help    .config(image=self.img_btn_help    ,width="50",height="24" )
         self.btn_settings.config(image=self.img_btn_settings,width="50",height="24" )
-  
+    
+    def settingsPage(self):
+        self.frameTitle(self.frameMain_left, "Settings",pack=False)
+        userConfig = {}
+        with open('beafullfetchpy/config/userSettings.json') as jsonFile:
+            try:
+                userConfig.update(json.load(jsonFile))
+            except:
+                pass
+        try:
+            isinstance(userConfig["ApiKeysPath"],str)
+        except:
+            userConfig["ApiKeysPath"] = ""
+        
+        ttk.Label(master = self.frameMain_left,text = 'API Keys File (JSON):'  ).grid(row=2,column=0)
+        self.currentApiKeysPath = ttk.Label(master = self.frameMain_left,text = "    " + userConfig["ApiKeysPath"]  ).grid(row=2,column=1)
+        ttk.Label(master = self.frameMain_left,text = 'Update:'  ).grid(row=3,column=0)
+        self.updateApiKeysPathEntry  = tk.Entry(master = self.frameMain_left ).grid(row=3,column=1)
+        self.updateApiKeysPathButton = ttk.Button(master = self.frameMain_left,text = "Update" ).grid(row=3,column=2)
+        ttk.Label(master = self.frameMain_left,text = '\n \n Note:').grid(row=4,column=0)
+        
+
     def frameText(self,frameName,text,pack=True,cfg={}):
         defaultCfg = dict(master=frameName,  width=550, height=10,background='#272822',fg="white") #NOTE: need same width as parent frame to allow fill x
         if not cfg == {}:
@@ -240,7 +293,12 @@ class beaGuiControler:
     
     def btn_databaseFun(self):
         self.clearUnpackFrameMainPackLeft()
-        self.app.frameTitle(self.app.frameMain_left, "Search Datasets")
+        #self.app.frameTitle(self.app.frameMain_left, "Search Datasets")
+        todos = {
+                   "Datasets": ["dataset"],
+                   "NIPA": ["NIPA Tables"]
+         }
+        self.app.makeNotebook(self.app.frameMain_left,todos)
         print("database button clicked")
 
     def btn_addFun(self): 
@@ -264,24 +322,46 @@ class beaGuiControler:
 
     def btn_helpFun(self): 
         self.clearUnpackFrameMainPackLeft()
-        #self.app.frameTitle(self.app.frameMain_left, "Help")
-        #self.app.frameText(self.app.frameMain_left,self.model.help)
-        #self.app.frameTitle(self.app.frameMain_left, "About")
-        #self.app.frameText(self.app.frameMain_left,self.model.licenses,cfg={'height':30})
         todos = {
+                   "BEA API": [self.model.helpBEAAPI],
                    "Help": [self.model.help],
-                   "About": [self.model.licenses]
+                   "About": [self.model.licenses],
                   
          }
         self.app.makeNotebook(self.app.frameMain_left,todos)
-        print(type(self.model.licenses))
         print("helpFun     button clicke")     
 
     def btn_settingsFun(self): 
         self.clearUnpackFrameMainPackLeft()
-        self.app.frameTitle(self.app.frameMain_left, "Settings")
+        self.app.settingsPage()
+        print(dir(self.app.updateApiKeysPathButton))
+        self.app.updateApiKeysPathButton.config(command=self.update_apiKeysPath)
+        #self.app.frameTitle(self.app.frameMain_left, "Settings",pack=False)
+        #
+        #userConfig = {}
+        #with open('beafullfetchpy/config/userSettings.json') as jsonFile:
+        #    try:
+        #        userConfig.update(json.load(jsonFile))
+        #    except:
+        #        pass
+        #try:
+        #    isinstance(userConfig["ApiKeysPath"],str)
+        #except:
+        #    userConfig["ApiKeysPath"] = ""
+        #
+        #ttk.Label(master = self.app.frameMain_left,text = 'API Keys File (JSON):'  ).grid(row=2,column=0)
+        #self.currentApiKeysPath = ttk.Label(master = self.app.frameMain_left,text = "    " + userConfig["ApiKeysPath"]  ).grid(row=2,column=1)
+        #ttk.Label(master = self.app.frameMain_left,text = 'Update:'  ).grid(row=3,column=0)
+        #UpdateApiKeysPath = tk.Entry(master = self.app.frameMain_left ).grid(row=3,column=1)
+        #ttk.Button(master = self.app.frameMain_left,text = "Update", command = self.update_apiKeysPath ).grid(row=3,column=2)
+        #ttk.Label(master = self.app.frameMain_left,text = '\n \n Note:').grid(row=4,column=0)
+        #
         print("settingsFun     button clicke")  
     
+    def update_apiKeysPath(self):
+        text = self.app.updateApiKeysPathEntry.get()
+        print(text)
+
     def clearUnpackFrameMainPackLeft(self):
         '''
           Removes the frames in frameMain, clear them, loads leftFrame back  
@@ -309,7 +389,7 @@ if __name__ == '__main__':
     c.app.mainloop()
     x = c.sessionData
 
-tk.Entry()
+
 
 
 '''
@@ -498,7 +578,38 @@ if __name__ == "__main__":
     app.mainloop()
 
 
+import tkinter as tk 
 
 
+class LoginApp(tk.Tk): 
+    def __init__(self): 
+        super().__init__() 
+        self.username = ttk.Entry(self) 
+        self.password = ttk.Entry(self, show="*") 
+        self.login_btn = tk.Button(self, text="Log in", 
+                                   command=self.print_login) 
+        self.clear_btn = tk.Button(self, text="Clear", 
+                                   command=self.clear_form)         
+        self.username.pack() 
+        self.password.pack() 
+        self.login_btn.pack(fill=tk.BOTH) 
+        self.clear_btn.pack(fill=tk.BOTH) 
+     
+    def print_login(self): 
+        print("Username: {}".format(self.username.get())) 
+        print("Password: {}".format(self.password.get()))
+      
+    def clear_form(self): 
+        self.username.delete(0, tk.END) 
+        self.password.delete(0, tk.END) 
+        self.username.focus_set() 
+ 
+if __name__ == "__main__": 
+    app = LoginApp() 
+    app.mainloop()
+
+
+
++ userConfig["ApiKeysPath"]
 
 '''
