@@ -1,10 +1,12 @@
 import tkinter as tk
 import tkinter.ttk as ttk
+from tkinter import messagebox
 import sys
 import os
 import subprocess
 import json
 import re
+
 
 class beaGuiModel:  
     def __init__(self,exitProcess=0):  
@@ -204,11 +206,26 @@ class beaGuiView(tk.Frame):
             userConfig["ApiKeysPath"] = ""
         
         ttk.Label(master = self.frameMain_left,text = 'API Keys File (JSON):'  ).grid(row=2,column=0)
-        self.currentApiKeysPath = ttk.Label(master = self.frameMain_left,text = "    " + userConfig["ApiKeysPath"]  ).grid(row=2,column=1)
+        self.currentApiKeysPath = ttk.Label(master = self.frameMain_left,text = "    " + userConfig["ApiKeysPath"]  )
+        self.currentApiKeysPath.grid(row=2,column=1,columnspan=2)
         ttk.Label(master = self.frameMain_left,text = 'Update:'  ).grid(row=3,column=0)
-        self.updateApiKeysPathEntry  = tk.Entry(master = self.frameMain_left ).grid(row=3,column=1)
-        self.updateApiKeysPathButton = ttk.Button(master = self.frameMain_left,text = "Update" ).grid(row=3,column=2)
-        ttk.Label(master = self.frameMain_left,text = '\n \n Note:').grid(row=4,column=0)
+        self.updateApiKeysPathEntry  = tk.Entry(master = self.frameMain_left )
+        self.updateApiKeysPathEntry.grid(row=3,column=1)
+        self.updateApiKeysPathButton = ttk.Button(master = self.frameMain_left,text = "Update" )
+        self.updateApiKeysPathButton.grid(row=3,column=2)
+
+        ttk.Label(master = self.frameMain_left,text = "Enter (or update) API Key:",justify=tk.LEFT  ).grid(row=4,column=0,columnspan=3)
+        ttk.Label(master = self.frameMain_left,text = 'API Name: '  ).grid(row=5,column=0)
+        self.newApiNameEntry  = tk.Entry(master = self.frameMain_left )
+        self.newApiNameEntry.grid(row=5,column=1)
+        ttk.Label(master = self.frameMain_left,text = 'API Key: '  ).grid(row=6,column=0)
+        self.newApiKeyEntry  = tk.Entry(master = self.frameMain_left )
+        self.newApiKeyEntry.grid(row=6,column=1)
+        self.newApiKeyNameButton = ttk.Button(master = self.frameMain_left,text = "Enter" )
+        self.newApiKeyNameButton.grid(row=6,column=2)
+        
+        
+        #ttk.Label(master = self.frameMain_left,text = '\n \n Note:').grid(row=4,column=0)
         
 
     def frameText(self,frameName,text,pack=True,cfg={}):
@@ -334,34 +351,99 @@ class beaGuiControler:
     def btn_settingsFun(self): 
         self.clearUnpackFrameMainPackLeft()
         self.app.settingsPage()
-        print(dir(self.app.updateApiKeysPathButton))
-        self.app.updateApiKeysPathButton.config(command=self.update_apiKeysPath)
-        #self.app.frameTitle(self.app.frameMain_left, "Settings",pack=False)
-        #
-        #userConfig = {}
-        #with open('beafullfetchpy/config/userSettings.json') as jsonFile:
-        #    try:
-        #        userConfig.update(json.load(jsonFile))
-        #    except:
-        #        pass
-        #try:
-        #    isinstance(userConfig["ApiKeysPath"],str)
-        #except:
-        #    userConfig["ApiKeysPath"] = ""
-        #
-        #ttk.Label(master = self.app.frameMain_left,text = 'API Keys File (JSON):'  ).grid(row=2,column=0)
-        #self.currentApiKeysPath = ttk.Label(master = self.app.frameMain_left,text = "    " + userConfig["ApiKeysPath"]  ).grid(row=2,column=1)
-        #ttk.Label(master = self.app.frameMain_left,text = 'Update:'  ).grid(row=3,column=0)
-        #UpdateApiKeysPath = tk.Entry(master = self.app.frameMain_left ).grid(row=3,column=1)
-        #ttk.Button(master = self.app.frameMain_left,text = "Update", command = self.update_apiKeysPath ).grid(row=3,column=2)
-        #ttk.Label(master = self.app.frameMain_left,text = '\n \n Note:').grid(row=4,column=0)
-        #
+        self.app.updateApiKeysPathButton.configure(command=self.update_apiKeysPath)
+        self.app.newApiKeyNameButton.configure(command=self.update_apiKey)
         print("settingsFun     button clicke")  
     
+    def update_apiKey(self):
+        #(1) get a path to the keys:
+        try:
+            #only write the path, no need to enter - in case want to try a temp path
+            ghostApiKeyPath = str(self.app.updateApiKeysPathEntry.get()) 
+        except:
+            ghostApiKeyPath = ""   
+        
+        if not ghostApiKeyPath == "":
+            apiKeyPath  = ghostApiKeyPath
+        elif hasattr(self,'newApiKeyPath'):
+            apiKeyPath = self.newApiKeyPath
+        else:
+            try:
+                with open('beafullfetchpy/config/userSettings.json') as jsonFile:
+                     tempDictPath = json.load(jsonFile)
+                     apiKeyPath = tempDictPath['ApiKeysPath']
+            except:
+                messagebox.showinfo("beafullfetch", "Could not find a Path to the API key - enter one above (no need to press the button)")
+        
+        #(2) get the new/updated key:
+        userKeys = {}
+        try:
+            newApiName = str(self.app.newApiNameEntry.get())
+            newApiKey  = str(self.app.newApiKeyEntry.get())
+            if not newApiName == '' and not newApiKey == '':
+                userKeys[newApiName] = newApiKey
+            else:
+                messagebox.showinfo("beafullfetch", "Either API Name or Key is Empty.")
+        except:
+            messagebox.showinfo("beafullfetch", "Could not read new API Name and Key.")
+        
+        #(3) update the Api 
+        try:
+            with open(apiKeyPath) as jsonFile:
+                tempAPIKeys = json.load(jsonFile)
+        except:
+            tempAPIKeys = {}
+            messagebox.showinfo("beafullfetch", "Could not open file with API keys - will create one")
+        
+        tempAPIKeys.update(userKeys)
+        print(newApiName + newApiKey + apiKeyPath)
+        try:
+            with open(apiKeyPath,'w') as jsonFile:
+                json.dump(tempAPIKeys, jsonFile)
+            messagebox.showinfo("beafullfetch", "API Key Created/Updated.")
+            self.app.newApiNameEntry.delete(0,'end')
+            self.app.newApiKeyEntry.delete(0,'end')
+        except:
+            messagebox.showinfo("beafullfetch", "Could not save new API key to file")
+    
     def update_apiKeysPath(self):
-        text = self.app.updateApiKeysPathEntry.get()
-        print(text)
+        #save in self, in case it's impossible to save the data to json,
+        # can use the key path entered during a session.
+        self.newApiKeyPath = str(self.app.updateApiKeysPathEntry.get())
+        userConfig = {}
+        try:
+            with open('beafullfetchpy/config/userSettings.json') as jsonFile:
+                 userConfig.update(json.load(jsonFile))
+        except:
+            pass
 
+        userConfig['ApiKeysPath'] = self.newApiKeyPath
+        try:
+            with open('beafullfetchpy/config/userSettings.json','w') as jsonFile:
+                 json.dump(userConfig,jsonFile)
+            self.app.currentApiKeysPath.configure(text=userConfig['ApiKeysPath'])
+            messagebox.showinfo("beafullfetch", "API Keys Path updated.")
+        except:
+            messagebox.showinfo("beafullfetch", "Error, API Keys Path not updated but available during the session.")
+
+    def update_BeaApiKey(self):
+        newPath = str(self.app.updateApiKeysPathEntry.get())
+        userConfig = {}
+        try:
+            with open('beafullfetchpy/config/userSettings.json') as jsonFile:
+                 userConfig.update(json.load(jsonFile))
+        except:
+            pass
+
+        userConfig['ApiKeysPath'] = newPath
+        try:
+            with open('beafullfetchpy/config/userSettings.json','w') as jsonFile:
+                 json.dump(userConfig,jsonFile)
+            self.app.currentApiKeysPath.configure(text=userConfig['ApiKeysPath'])
+            messagebox.showinfo("beafullfetch", "API Keys Path updated.")
+        except:
+            messagebox.showinfo("beafullfetch", "Error, API Keys Path not updated.")    
+    
     def clearUnpackFrameMainPackLeft(self):
         '''
           Removes the frames in frameMain, clear them, loads leftFrame back  
