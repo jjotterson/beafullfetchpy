@@ -205,16 +205,19 @@ class beaGuiView(tk.Frame):
         except:
             userConfig["ApiKeysPath"] = ""
         
-        ttk.Label(master = self.frameMain_left,text = 'API Keys File (JSON):'  ).grid(row=2,column=0)
+        ttk.Label(master = self.frameMain_left,text = 'API Keys File (JSON)' ).grid(
+            row=1,column=0,columnspan=2,pady=(50,0))
+        ttk.Label(master = self.frameMain_left,text = 'Current Path:'  ).grid(row=2,column=0)
         self.currentApiKeysPath = ttk.Label(master = self.frameMain_left,text = "    " + userConfig["ApiKeysPath"]  )
         self.currentApiKeysPath.grid(row=2,column=1,columnspan=2)
         ttk.Label(master = self.frameMain_left,text = 'Update:'  ).grid(row=3,column=0)
         self.updateApiKeysPathEntry  = tk.Entry(master = self.frameMain_left )
         self.updateApiKeysPathEntry.grid(row=3,column=1)
         self.updateApiKeysPathButton = ttk.Button(master = self.frameMain_left,text = "Update" )
-        self.updateApiKeysPathButton.grid(row=3,column=2)
+        self.updateApiKeysPathButton.grid(row=3,column=2,padx=(10,0))
 
-        ttk.Label(master = self.frameMain_left,text = "Enter (or update) API Key:",justify=tk.LEFT  ).grid(row=4,column=0,columnspan=3)
+        ttk.Label(master = self.frameMain_left,text = "Enter (or update) API Key:", anchor = tk.W  ).grid(
+            row=4,column=0,columnspan=3,pady=(40,0))
         ttk.Label(master = self.frameMain_left,text = 'API Name: '  ).grid(row=5,column=0)
         self.newApiNameEntry  = tk.Entry(master = self.frameMain_left )
         self.newApiNameEntry.grid(row=5,column=1)
@@ -224,7 +227,11 @@ class beaGuiView(tk.Frame):
         self.newApiKeyNameButton = ttk.Button(master = self.frameMain_left,text = "Enter" )
         self.newApiKeyNameButton.grid(row=6,column=2)
         
-        
+        ttk.Label(master = self.frameMain_left,text = 'Delete API Key: '  ).grid(row=8,column=0,pady=(40,0))
+        self.newApiKeyEntry  = tk.Entry(master = self.frameMain_left )
+        self.newApiKeyEntry.grid(row=8,column=1,pady=(40,0))
+        self.deleteApiKeyButton = ttk.Button(master = self.frameMain_left,text = "Enter" )
+        self.deleteApiKeyButton.grid(row=8,column=2,pady=(40,0))
         #ttk.Label(master = self.frameMain_left,text = '\n \n Note:').grid(row=4,column=0)
         
 
@@ -250,7 +257,7 @@ class beaGuiView(tk.Frame):
         self.style.theme_create( "Noteb", parent="alt", 
             settings={
                 "TFrame"   : {"configure":{'background':'#272822','foreground':'white'}}, 
-                "TLabel"   : {"configure":{'background':'#272822','foreground':'white'}}, 
+                "TLabel"   : {"configure":{'background':'#272822','foreground':'white',}}, 
                 "TNotebook": {"configure": {"tabmargins": [0, 0, 0, 0], 'background':'#272822' ,'borderwidth':1} },
                 "TNotebook.Tab": {
                     "configure": {"padding": [4, 4], "background": '#272822','foreground':'white' ,'underline':0},
@@ -293,7 +300,7 @@ class beaGuiControler:
        self.root = tk.Tk()
        self.root.configure(background='#272822')
        self.model = beaGuiModel()
-       self.app = beaGuiView(self.model,master=self.root)
+       self.view = beaGuiView(self.model,master=self.root)
        self.get_ctrl()                     #run the Controls that populate entries in view from model and load button functions.
        self.ctrl_quit = self.root.destroy
        self.sessionData = 0
@@ -468,7 +475,7 @@ class beaGuiControler:
 
 if __name__ == '__main__':
     c = beaGuiControler()
-    c.app.mainloop()
+    c.view.mainloop()
     x = c.sessionData
 
 
@@ -693,5 +700,60 @@ if __name__ == "__main__":
 
 
 + userConfig["ApiKeysPath"]
+
+
+
+import csv
+import tkinter as tk
+import tkinter.ttk as ttk
+class App(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.makeTable()
+    
+    def makeTable(self):
+        self.title("Ttk Treeview")
+        columns = ("#1", "#2", "#3")
+        self.tree = ttk.Treeview(self, show="headings", columns=columns)
+        self.tree.heading("#1", text="Last name")
+        self.tree.heading("#2", text="First name")
+        self.tree.heading("#3", text="Email")
+        ysb = ttk.Scrollbar(self, orient=tk.VERTICAL, 
+                            command=self.tree.yview)
+        self.tree.configure(yscroll=ysb.set)
+        rowNum = 1
+        with open("contacts.csv", newline="") as f:
+            for contact in csv.reader(f):
+                if rowNum%2 == 1:
+                   rowLabel = 'oddrow'
+                else:
+                   rowLabel = 'evenrow'          
+                self.tree.insert("", tk.END, values=contact,tags=(rowLabel,))
+                rowNum = rowNum +1 
+    
+        self.tree.bind("<<TreeviewSelect>>", self.print_selection)
+        self.tree.grid(row=0, column=0)
+        ysb.grid(row=0, column=1, sticky=tk.N + tk.S)
+        self.rowconfigure(0, weight=1)
+        self.columnconfigure(0, weight=1)
+        self.tree.tag_configure('oddrow',background = '#7c7c76',foreground="white")
+        self.tree.tag_configure('evenrow', background='#48483E',foreground="white")
+        self.style = ttk.Style(self)
+        #self.style.theme_create( "Treeview", parent="alt", 
+        #    settings={
+    def print_selection(self, event):
+        for selection in self.tree.selection():
+            item = self.tree.item(selection)
+            last_name, first_name, email = item["values"][0:3]
+            text = "Selection: {}, {} <{}>"
+            print(text.format(last_name, first_name, email))
+ 
+ 
+if __name__ == "__main__":
+    app = App()
+    app.mainloop()
+
+
+
 
 '''
