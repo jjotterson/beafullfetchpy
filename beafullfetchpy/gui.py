@@ -300,22 +300,22 @@ class beaGuiControler:
     ## contorl part of beaGuiView #################################################
     def get_ctrl(self): 
         #all buttons are flat when clicked 
-        self.app.btn_database.config( command = self.btn_databaseFun  )
-        self.app.btn_add     .config( command = self.btn_addFun       )      
-        self.app.btn_download.config( command = self.btn_downloadFun  )
-        self.app.btn_load    .config( command = self.btn_loadFun      )    
-        self.app.btn_code    .config( command = self.btn_codeFun      )    
-        self.app.btn_help    .config( command = self.btn_helpFun      )    
-        self.app.btn_settings.config( command = self.btn_settingsFun  )    
+        self.view.btn_database.config( command = self.btn_databaseFun  )
+        self.view.btn_add     .config( command = self.btn_addFun       )      
+        self.view.btn_download.config( command = self.btn_downloadFun  )
+        self.view.btn_load    .config( command = self.btn_loadFun      )    
+        self.view.btn_code    .config( command = self.btn_codeFun      )    
+        self.view.btn_help    .config( command = self.btn_helpFun      )    
+        self.view.btn_settings.config( command = self.btn_settingsFun  )    
     
     def btn_databaseFun(self):
         self.clearUnpackFrameMainPackLeft()
-        #self.app.frameTitle(self.app.frameMain_left, "Search Datasets")
+        #self.view.frameTitle(self.view.frameMain_left, "Search Datasets")
         todos = {
                    "Datasets": ["dataset"],
                    "NIPA": ["NIPA Tables"]
          }
-        self.app.makeNotebook(self.app.frameMain_left,todos)
+        self.view.makeNotebook(self.view.frameMain_left,todos)
         print("database button clicked")
 
     def btn_addFun(self): 
@@ -324,17 +324,17 @@ class beaGuiControler:
 
     def btn_downloadFun(self): 
         self.clearUnpackFrameMainPackLeft()
-        self.app.frameTitle(self.app.frameMain_left, "Download Data")
+        self.view.frameTitle(self.view.frameMain_left, "Download Data")
         print("downloadFun button clicke")
 
     def btn_loadFun(self): 
         self.clearUnpackFrameMainPackLeft()
-        self.app.frameTitle(self.app.frameMain_left, "Load Data to Current Session")
+        self.view.frameTitle(self.view.frameMain_left, "Load Data to Current Session")
         print("loadFun     button clicke")
 
     def btn_codeFun(self): 
         self.clearUnpackFrameMainPackLeft()
-        self.app.frameTitle(self.app.frameMain_left, "Code to Extract Data")
+        self.view.frameTitle(self.view.frameMain_left, "Code to Extract Data")
         print("codeFun     button clicke")
 
     def btn_helpFun(self): 
@@ -345,21 +345,21 @@ class beaGuiControler:
                    "About": [self.model.licenses],
                   
          }
-        self.app.makeNotebook(self.app.frameMain_left,todos)
+        self.view.makeNotebook(self.view.frameMain_left,todos)
         print("helpFun     button clicke")     
 
     def btn_settingsFun(self): 
         self.clearUnpackFrameMainPackLeft()
-        self.app.settingsPage()
-        self.app.updateApiKeysPathButton.configure(command=self.update_apiKeysPath)
-        self.app.newApiKeyNameButton.configure(command=self.update_apiKey)
+        self.view.settingsPage()
+        self.view.updateApiKeysPathButton.configure(command=self.update_apiKeysPath)
+        self.view.newApiKeyNameButton.configure(command=self.update_apiKey)
         print("settingsFun     button clicke")  
     
     def update_apiKey(self):
         #(1) get a path to the keys:
         try:
             #only write the path, no need to enter - in case want to try a temp path
-            ghostApiKeyPath = str(self.app.updateApiKeysPathEntry.get()) 
+            ghostApiKeyPath = str(self.view.updateApiKeysPathEntry.get()) 
         except:
             ghostApiKeyPath = ""   
         
@@ -378,8 +378,8 @@ class beaGuiControler:
         #(2) get the new/updated key:
         userKeys = {}
         try:
-            newApiName = str(self.app.newApiNameEntry.get())
-            newApiKey  = str(self.app.newApiKeyEntry.get())
+            newApiName = str(self.view.newApiNameEntry.get())
+            newApiKey  = str(self.view.newApiKeyEntry.get())
             if not newApiName == '' and not newApiKey == '':
                 userKeys[newApiName] = newApiKey
             else:
@@ -401,15 +401,15 @@ class beaGuiControler:
             with open(apiKeyPath,'w') as jsonFile:
                 json.dump(tempAPIKeys, jsonFile)
             messagebox.showinfo("beafullfetch", "API Key Created/Updated.")
-            self.app.newApiNameEntry.delete(0,'end')
-            self.app.newApiKeyEntry.delete(0,'end')
+            self.view.newApiNameEntry.delete(0,'end')
+            self.view.newApiKeyEntry.delete(0,'end')
         except:
             messagebox.showinfo("beafullfetch", "Could not save new API key to file")
     
     def update_apiKeysPath(self):
         #save in self, in case it's impossible to save the data to json,
         # can use the key path entered during a session.
-        self.newApiKeyPath = str(self.app.updateApiKeysPathEntry.get())
+        self.newApiKeyPath = str(self.view.updateApiKeysPathEntry.get())
         userConfig = {}
         try:
             with open('beafullfetchpy/config/userSettings.json') as jsonFile:
@@ -421,13 +421,13 @@ class beaGuiControler:
         try:
             with open('beafullfetchpy/config/userSettings.json','w') as jsonFile:
                  json.dump(userConfig,jsonFile)
-            self.app.currentApiKeysPath.configure(text=userConfig['ApiKeysPath'])
+            self.view.currentApiKeysPath.configure(text=userConfig['ApiKeysPath'])
             messagebox.showinfo("beafullfetch", "API Keys Path updated.")
         except:
             messagebox.showinfo("beafullfetch", "Error, API Keys Path not updated but available during the session.")
 
     def update_BeaApiKey(self):
-        newPath = str(self.app.updateApiKeysPathEntry.get())
+        newPath = str(self.view.updateApiKeysPathEntry.get())
         userConfig = {}
         try:
             with open('beafullfetchpy/config/userSettings.json') as jsonFile:
@@ -439,7 +439,7 @@ class beaGuiControler:
         try:
             with open('beafullfetchpy/config/userSettings.json','w') as jsonFile:
                  json.dump(userConfig,jsonFile)
-            self.app.currentApiKeysPath.configure(text=userConfig['ApiKeysPath'])
+            self.view.currentApiKeysPath.configure(text=userConfig['ApiKeysPath'])
             messagebox.showinfo("beafullfetch", "API Keys Path updated.")
         except:
             messagebox.showinfo("beafullfetch", "Error, API Keys Path not updated.")    
@@ -450,14 +450,14 @@ class beaGuiControler:
         '''
         self.unpackFrameMainSubframes()
         self.clearFrameMainSubframes()
-        self.app.frameMain_left.pack(**self.app.frameMain_left_packCfg)
+        self.view.frameMain_left.pack(**self.view.frameMain_left_packCfg)
 
     def unpackFrameMainSubframes(self):
-        for child in self.app.frameMain.winfo_children():
+        for child in self.view.frameMain.winfo_children():
             child.pack_forget()
     
     def clearFrameMainSubframes(self):
-        for child in self.app.frameMain.winfo_children():
+        for child in self.view.frameMain.winfo_children():
             for subchild in child.winfo_children():
                 subchild.destroy()
     ## end of view control part ################################################    
