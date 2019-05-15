@@ -6,7 +6,8 @@ import os
 import subprocess
 import json
 import re
-
+import csv
+import pandas as pd
 
 class beaGuiModel:  
     def __init__(self,exitProcess=0):  
@@ -118,7 +119,7 @@ class beaGuiView(tk.Frame):
     def Appconfigs(self, title="BEA Full Data Fetch (beafullfetch)"):
         self.master.title(title)
         # self.master.option_add('*Font','Times')
-        self.master.geometry('{}x{}'.format(950, 800))
+        self.master.geometry('{}x{}'.format(1300, 850))
     def MainContainers(self):
         # Main containers
         self.frameMain = tk.Frame(
@@ -193,7 +194,18 @@ class beaGuiView(tk.Frame):
         self.btn_settings.config(image=self.img_btn_settings,width="50",height="24" )
     
     def settingsPage(self):
-        self.frameTitle(self.frameMain_left, "Settings",pack=False)
+        #geometry
+        self.frameMain_left_topFrame           = ttk.Frame(master=self.frameMain_left)
+        self.frameMain_left_bottomFrame        = ttk.Frame(master=self.frameMain_left)
+        self.frameMain_left_bottomFrame_left   = ttk.Frame(master=self.frameMain_left_bottomFrame)
+        self.frameMain_left_bottomFrame_right  = ttk.Frame(master=self.frameMain_left_bottomFrame)
+        self.frameMain_left_topFrame.pack(side = tk.TOP,fill=tk.X,pady=(0,0))
+        self.frameMain_left_bottomFrame.pack(side = tk.TOP,fill=tk.X,pady=(50,0))
+        self.frameMain_left_bottomFrame_left.pack(side = tk.LEFT,padx=(0,150))
+        self.frameMain_left_bottomFrame_right.pack(side = tk.LEFT)  #TODO: compare to right
+        
+        #content
+        self.frameTitle(self.frameMain_left_topFrame, "Settings",pack=False)
         userConfig = {}
         with open('beafullfetchpy/config/userSettings.json') as jsonFile:
             try:
@@ -205,34 +217,53 @@ class beaGuiView(tk.Frame):
         except:
             userConfig["ApiKeysPath"] = ""
         
-        ttk.Label(master = self.frameMain_left,text = 'API Keys File (JSON)' ).grid(
+        ttk.Label(master = self.frameMain_left_topFrame,text = 'API Keys File (JSON)' ).grid(
             row=1,column=0,columnspan=2,pady=(50,0))
-        ttk.Label(master = self.frameMain_left,text = 'Current Path:'  ).grid(row=2,column=0)
-        self.currentApiKeysPath = ttk.Label(master = self.frameMain_left,text = "    " + userConfig["ApiKeysPath"]  )
+        ttk.Label(master = self.frameMain_left_topFrame,text = 'Current Path:'  ).grid(row=2,column=0)
+        self.currentApiKeysPath = ttk.Label(master = self.frameMain_left_topFrame,text = "    " + userConfig["ApiKeysPath"]  )
         self.currentApiKeysPath.grid(row=2,column=1,columnspan=2)
-        ttk.Label(master = self.frameMain_left,text = 'Update:'  ).grid(row=3,column=0)
-        self.updateApiKeysPathEntry  = tk.Entry(master = self.frameMain_left )
+        ttk.Label(master = self.frameMain_left_topFrame,text = 'Update:'  ).grid(row=3,column=0)
+        self.updateApiKeysPathEntry  = tk.Entry(master = self.frameMain_left_topFrame )
         self.updateApiKeysPathEntry.grid(row=3,column=1)
-        self.updateApiKeysPathButton = ttk.Button(master = self.frameMain_left,text = "Update" )
+        self.updateApiKeysPathButton = ttk.Button(master = self.frameMain_left_topFrame,text = "Update" )
         self.updateApiKeysPathButton.grid(row=3,column=2,padx=(10,0))
-
-        ttk.Label(master = self.frameMain_left,text = "Enter (or update) API Key:", anchor = tk.W  ).grid(
-            row=4,column=0,columnspan=3,pady=(40,0))
-        ttk.Label(master = self.frameMain_left,text = 'API Name: '  ).grid(row=5,column=0)
-        self.newApiNameEntry  = tk.Entry(master = self.frameMain_left )
-        self.newApiNameEntry.grid(row=5,column=1)
-        ttk.Label(master = self.frameMain_left,text = 'API Key: '  ).grid(row=6,column=0)
-        self.newApiKeyEntry  = tk.Entry(master = self.frameMain_left )
-        self.newApiKeyEntry.grid(row=6,column=1)
-        self.newApiKeyNameButton = ttk.Button(master = self.frameMain_left,text = "Enter" )
-        self.newApiKeyNameButton.grid(row=6,column=2)
         
-        ttk.Label(master = self.frameMain_left,text = 'Delete API Key: '  ).grid(row=8,column=0,pady=(40,0))
-        self.newApiKeyEntry  = tk.Entry(master = self.frameMain_left )
-        self.newApiKeyEntry.grid(row=8,column=1,pady=(40,0))
-        self.deleteApiKeyButton = ttk.Button(master = self.frameMain_left,text = "Enter" )
-        self.deleteApiKeyButton.grid(row=8,column=2,pady=(40,0))
+        #ttk.Label(master = self.frameMain_left_bottomFrame_left,text = "Display API Keys").grid(row=3,column=0)
+        self.displayApisButton = ttk.Button(master = self.frameMain_left_bottomFrame_left,text = "Display API Keys" )
+        self.displayApisButton.grid(row=0,column=0,columnspan = 2, padx = (0,0), pady=(0,0))
+
+        ttk.Label(master = self.frameMain_left_bottomFrame_left,text = "Enter (or update) API Key:", anchor = tk.W  ).grid(
+            row=4,column=0,columnspan=3,pady=(40,0))
+        ttk.Label(master = self.frameMain_left_bottomFrame_left,text = 'API Name: '  ).grid(row=5,column=0)
+        self.newApiNameEntry  = tk.Entry(master = self.frameMain_left_bottomFrame_left )
+        self.newApiNameEntry.grid(row=5,column=1)
+        ttk.Label(master = self.frameMain_left_bottomFrame_left,text = 'API Key: '  ).grid(row=6,column=0)
+        self.newApiKeyEntry  = tk.Entry(master = self.frameMain_left_bottomFrame_left )
+        self.newApiKeyEntry.grid(row=6,column=1)
+        ttk.Label(master = self.frameMain_left_bottomFrame_left,text = 'API Address: '  ).grid(row=7,column=0)
+        self.newApiAddressEntry  = tk.Entry(master = self.frameMain_left_bottomFrame_left )
+        self.newApiAddressEntry.grid(row=7,column=1)
+        ttk.Label(master = self.frameMain_left_bottomFrame_left,text = 'API Description: '  ).grid(row=8,column=0)
+        self.newApiDescriptionEntry  = tk.Entry(master = self.frameMain_left_bottomFrame_left )
+        self.newApiDescriptionEntry.grid(row=8,column=1)
+        self.newApiKeyNameButton = ttk.Button(master = self.frameMain_left_bottomFrame_left,text = "Enter" )
+        self.newApiKeyNameButton.grid(row=8,column=2,padx=(10,0))
+        
+        ttk.Label(master = self.frameMain_left_bottomFrame_left,text = 'Delete API Key: '  ).grid(row=10,column=0,pady=(40,0))
+        self.deleteApiKeyEntry  = tk.Entry(master = self.frameMain_left_bottomFrame_left )
+        self.deleteApiKeyEntry.grid(row=10,column=1,pady=(40,0))
+        self.deleteApiKeyButton = ttk.Button(master = self.frameMain_left_bottomFrame_left,text = "Enter" )
+        self.deleteApiKeyButton.grid(row=10,column=2,pady=(40,0))
         #ttk.Label(master = self.frameMain_left,text = '\n \n Note:').grid(row=4,column=0)
+        
+        #dataFrame = pd.read_csv('contacts.csv')
+        with open( userConfig["ApiKeysPath"] ) as jsonfile:
+            js = json.load(jsonfile)
+        dataFrame = pd.DataFrame({'API Name': list(js.keys()), 'API Key': list(js.values()) })
+        self.apiTable = self.makeTable(self.frameMain_left_bottomFrame_right,dataFrame,dict(row=0,column=0))
+        #print(dir(self))        
+        #self.tree.grid(row=5,column=4,rowspan=5,columnspan=3,padx=(100,0))
+        
         
 
     def frameText(self,frameName,text,pack=True,cfg={}):
@@ -269,6 +300,49 @@ class beaGuiView(tk.Frame):
 
         self.style.theme_use("Noteb")   
     
+    def makeTable(self,frameName,dataFrame,gridParams,scrollLen = 10):
+        '''
+            scrollLen = number of lines after which the scrollbar in included
+        '''
+        columns = tuple('#{}'.format(x) for x in range(1,len(dataFrame.columns)+1))
+        self.tree = ttk.Treeview(master = frameName, show="headings", columns=columns)
+        #col headings 
+        for entry in range(0,len(dataFrame.columns)):
+            self.tree.heading(columns[entry], text=dataFrame.columns[entry])
+        
+        #TODO: fix x slider
+        #xsb = ttk.Scrollbar(master=frameName, orient=tk.HORIZONTAL, command=self.tree.xview)
+        #self.tree.configure(yscroll=xsb.set)
+
+        if len(dataFrame) > scrollLen:
+            ysb = ttk.Scrollbar(master=frameName, orient=tk.VERTICAL, 
+                            command=self.tree.yview)
+            self.tree.configure(xscroll=ysb.set)
+        rowNum = 1
+        for index,row in dataFrame.iterrows():
+            if rowNum%2 == 1:
+               rowLabel = 'oddrow'
+            else:
+               rowLabel = 'evenrow'          
+            self.tree.insert("", tk.END, values=list(row),tags=(rowLabel,))
+            rowNum = rowNum +1 
+        
+        #self.tree.bind("<<TreeviewSelect>>", self.print_selection)
+        self.rowconfigure(0, weight=1)
+        self.columnconfigure(0, weight=1)
+        self.tree.tag_configure('oddrow',background = '#7c7c76',foreground="white")
+        self.tree.tag_configure('evenrow', background='#48483E',foreground="white")
+        self.tree.grid(**gridParams)
+        if len(dataFrame) > scrollLen:
+           sliderGrid = gridParams
+           sliderGrid.update( dict(column = gridParams['column']+1, sticky=tk.N + tk.S ) )
+           ysb.grid(**sliderGrid)
+        #TODO: fix x slider
+        #sliderGridH = gridParams
+        #sliderGridH.update( dict(row = gridParams['row']+1 ) )
+        #xsb.grid(**sliderGridH)
+        
+
     def makeNotebook(self,frameName,todos):
         '''
            frameName - name of parent Frame
@@ -709,12 +783,17 @@ import tkinter.ttk as ttk
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
+        self.root = tk.Tk()
+        tk.Label(self.root,text="hi").grid(row=0,column=0)
         self.makeTable()
-    
+        style = ttk.Style(self.root)
+        style.theme_use("clam")
+        style.configure("Treeview", background="black", 
+                fieldbackground="black", foreground="white")
     def makeTable(self):
         self.title("Ttk Treeview")
         columns = ("#1", "#2", "#3")
-        self.tree = ttk.Treeview(self, show="headings", columns=columns)
+        self.tree = ttk.Treeview(self.root, show="headings", columns=columns)
         self.tree.heading("#1", text="Last name")
         self.tree.heading("#2", text="First name")
         self.tree.heading("#3", text="Email")
@@ -730,10 +809,10 @@ class App(tk.Tk):
                    rowLabel = 'evenrow'          
                 self.tree.insert("", tk.END, values=contact,tags=(rowLabel,))
                 rowNum = rowNum +1 
-    
+        
         self.tree.bind("<<TreeviewSelect>>", self.print_selection)
-        self.tree.grid(row=0, column=0)
-        ysb.grid(row=0, column=1, sticky=tk.N + tk.S)
+        self.tree.grid(row=1, column=0)
+        ysb.grid(row=1, column=1, sticky=tk.N + tk.S)
         self.rowconfigure(0, weight=1)
         self.columnconfigure(0, weight=1)
         self.tree.tag_configure('oddrow',background = '#7c7c76',foreground="white")
