@@ -347,7 +347,7 @@ class beaGuiView(tk.Frame):
         self.tree.grid(**gridParams)
         if len(dataFrame) > scrollLen:
            sliderGrid = gridParams
-           sliderGrid.update( dict(column = gridParams['column']+1, sticky=tk.N + tk.S ) )
+           sliderGrid.update( dict(column = gridParams['column']+gridParams['columnspan']+1, sticky=tk.N + tk.S ) )
            ysb.grid(**sliderGrid)
         #TODO: fix x slider
         #sliderGridH = gridParams
@@ -529,6 +529,7 @@ class beaGuiControler:
             with open(self.sessionApiKeyPath,'w') as jsonFile:  #TODO: write as separate functions.
                 json.dump(js, jsonFile)
             messagebox.showinfo("beafullfetch", "Deleted Key "+ApiName)
+            self.view.deleteApiKeyEntry.delete(0,'end')
         except:
             messagebox.showinfo("beafullfetch", "Could not delete API from data")
          
@@ -561,7 +562,7 @@ class beaGuiControler:
             newApiKey          = str(self.view.newApiKeyEntry.get())
             newApiAddress      = str(self.view.newApiAddressEntry.get())
             newApiDescription  = str(self.view.newApiDescriptionEntry.get())
-            if not newApiName == '' and not newApiKey == '':
+            if not newApiName == '' : 
                 userKeys[newApiName] = dict(key=newApiKey,description=newApiDescription,address=newApiAddress)
             else:
                 messagebox.showinfo("beafullfetch", "Either API Name or Key is Empty.")
@@ -651,7 +652,20 @@ class beaGuiControler:
     ## controls :               ################################################
 
 
-
+def openGui(sessionReturn = ""):
+    '''
+      e.g
+      import beafullfetchpy.gui as bfg
+      bfg.openGui()
+    '''
+    #TODO: save sessionReturn to a named variable.
+    #sys.stdout = os.devnull
+    #sys.stderr = os.devnull
+    c = beaGuiControler()
+    c.view.mainloop()
+    x = c.sessionData   
+    #sys.stdout = sys.__stdout__
+    #sys.stderr = sys.__stderr__
 
 if __name__ == '__main__':
     c = beaGuiControler()
