@@ -201,8 +201,8 @@ class beaGuiView(tk.Frame):
         self.frameMain_left_bottomFrame_right  = ttk.Frame(master=self.frameMain_left_bottomFrame)
         self.frameMain_left_topFrame.pack(side = tk.TOP,fill=tk.X,pady=(0,0))
         self.frameMain_left_bottomFrame.pack(side = tk.TOP,fill=tk.X,pady=(50,0))
-        self.frameMain_left_bottomFrame_left.pack(side = tk.LEFT,padx=(0,150))
-        self.frameMain_left_bottomFrame_right.pack(side = tk.LEFT)  
+        self.frameMain_left_bottomFrame_left.pack(side = tk.LEFT,padx=(0,150),fill=tk.Y)
+        self.frameMain_left_bottomFrame_right.pack(side = tk.LEFT,fill = tk.Y)  
         
         #######  TOP FRAME #################################################
         self.frameTitle(self.frameMain_left_topFrame, "Settings",pack=False)
@@ -219,48 +219,60 @@ class beaGuiView(tk.Frame):
         
         ttk.Label(master = self.frameMain_left_topFrame,text = 'API Keys File (JSON)' ).grid(
             row=1,column=0,columnspan=2,pady=(40,0),sticky=tk.W)
-        ttk.Label(master = self.frameMain_left_topFrame,text = 'Current Path:'  ).grid(row=2,column=0,sticky="nsew")
-        self.currentApiKeysPath = ttk.Label(master = self.frameMain_left_topFrame,text =  userConfig["ApiKeysPath"] )
+        ttk.Label(master = self.frameMain_left_topFrame,text = 'Default Path:'  ).grid(row=2,column=0,sticky="nsew")
+        self.currentApiKeysPath = ttk.Label(master = self.frameMain_left_topFrame,text =  "" ) #control updates this
         self.currentApiKeysPath.grid(row=2,column=1,columnspan=2,sticky=tk.W)
-        ttk.Label(master = self.frameMain_left_topFrame,text = 'Update:'  ).grid(row=3,column=0,sticky=tk.W)
+        ttk.Label(master = self.frameMain_left_topFrame,text = 'New Path:'  ).grid(row=3,column=0,sticky=tk.W)
         self.updateApiKeysPathEntry  = tk.Entry(master = self.frameMain_left_topFrame )
         self.updateApiKeysPathEntry.grid(row=3,column=1)
-        self.updateApiKeysPathButton = ttk.Button(master = self.frameMain_left_topFrame,text = "Update" )
-        self.updateApiKeysPathButton.grid(row=3,column=2,padx=(10,0))
+        self.btn_updateApiKeysPath = ttk.Button(master = self.frameMain_left_topFrame,text = "Update Database" )
+        self.btn_updateApiKeysPath.grid(row=3,column=2,padx=(10,0))
+
+        ttk.Label(master = self.frameMain_left_topFrame,text = 'Session Path:'  ).grid(row=4,column=0,sticky="nsew")
+        self.sessionApiKeysPath = ttk.Label(master = self.frameMain_left_topFrame,text =  "" ) #control updates this
+        self.sessionApiKeysPath.grid(row=4,column=1,columnspan=2,sticky=tk.W)
+        ttk.Label(master = self.frameMain_left_topFrame,text = 'New Session Path:'  ).grid(row=5,column=0,sticky=tk.W)
+        self.updateSessionApiKeysPathEntry  = tk.Entry(master = self.frameMain_left_topFrame )
+        self.updateSessionApiKeysPathEntry.grid(row=5,column=1)
+        self.btn_sessionUpdateApiKeysPath = ttk.Button(master = self.frameMain_left_topFrame,text = "Use during Session" )
+        self.btn_sessionUpdateApiKeysPath.grid(row=5,column=2,padx=(10,0))
         
         
         ####### BOTTOM FRAME ###############################################
-        ttk.Label(master = self.frameMain_left_bottomFrame_left,text = "Enter (or update) API Key:"  ).grid(
+        
+        ###### LEFT SIDE
+        ttk.Label(master = self.frameMain_left_bottomFrame_left,text = "Create (or update) API Key:"  ).grid(
             row=0,column=0,columnspan=3,pady=(0,5),sticky=tk.W)
+        
         ttk.Label(master = self.frameMain_left_bottomFrame_left,text = 'API Name: '  ).grid(row=5,column=0,sticky=tk.W,pady=(0,5))
         self.newApiNameEntry  = tk.Entry(master = self.frameMain_left_bottomFrame_left )
         self.newApiNameEntry.grid(row=5,column=1)
+        
         ttk.Label(master = self.frameMain_left_bottomFrame_left,text = 'API Key: '  ).grid(row=6,column=0,sticky=tk.W,pady=(0,5))
         self.newApiKeyEntry  = tk.Entry(master = self.frameMain_left_bottomFrame_left )
         self.newApiKeyEntry.grid(row=6,column=1)
+        
         ttk.Label(master = self.frameMain_left_bottomFrame_left,text = 'API Address: '  ).grid(row=7,column=0,sticky=tk.W,pady=(0,5))
         self.newApiAddressEntry  = tk.Entry(master = self.frameMain_left_bottomFrame_left )
         self.newApiAddressEntry.grid(row=7,column=1)
+        
         ttk.Label(master = self.frameMain_left_bottomFrame_left,text = 'API Description: '  ).grid(row=8,column=0,sticky=tk.W,pady=(0,5))
         self.newApiDescriptionEntry  = tk.Entry(master = self.frameMain_left_bottomFrame_left )
         self.newApiDescriptionEntry.grid(row=8,column=1,sticky=tk.W)
         self.newApiKeyNameButton = ttk.Button(master = self.frameMain_left_bottomFrame_left,text = "Enter" )
         self.newApiKeyNameButton.grid(row=8,column=2,padx=(10,0))
         
-        ttk.Label(master = self.frameMain_left_bottomFrame_left,text = 'Delete API Key: '  ).grid(row=10,column=0,pady=(40,0),sticky=tk.W)
+        ttk.Label(master = self.frameMain_left_bottomFrame_left,text = 'Delete API Key (API Name): '  ).grid(row=10,column=0,pady=(40,0),sticky=tk.W)
         self.deleteApiKeyEntry  = tk.Entry(master = self.frameMain_left_bottomFrame_left )
         self.deleteApiKeyEntry.grid(row=10,column=1,pady=(40,0))
-        self.deleteApiKeyButton = ttk.Button(master = self.frameMain_left_bottomFrame_left,text = "Enter" )
-        self.deleteApiKeyButton.grid(row=10,column=2,pady=(40,0),padx=(10,0))
-        #ttk.Label(master = self.frameMain_left,text = '\n \n Note:').grid(row=4,column=0)
+        self.btn_deleteApiKey = ttk.Button(master = self.frameMain_left_bottomFrame_left,text = "Enter" )
+        self.btn_deleteApiKey.grid(row=10,column=2,pady=(40,0),padx=(10,0))
         
-        #dataFrame = pd.read_csv('contacts.csv')
-        with open( userConfig["ApiKeysPath"] ) as jsonfile:
-            js = json.load(jsonfile)
-        dataFrame = pd.DataFrame({'API Name': list(js.keys()), 'API Key': list(js.values()) })
-        self.displayApisButton = ttk.Button(master = self.frameMain_left_bottomFrame_right,text = "Display API Keys" )
-        self.displayApisButton.grid(row=0,column=0,columnspan = 2, padx = (0,0), pady=(60,10),sticky=tk.W)
-        self.apiTable = self.makeTable(self.frameMain_left_bottomFrame_right,dataFrame,dict(row=1,column=0))
+        ###### RIGHT SIDE 
+        self.btn_displayApis = ttk.Button(master = self.frameMain_left_bottomFrame_right,text = "Display API Keys" )
+        self.btn_displayApis.grid(row=0,column=0, padx = (0,0), pady=(0,10),sticky=tk.W)
+        self.lbl_displayApis = ttk.Label(master= self.frameMain_left_bottomFrame_right, text = "")
+        self.lbl_displayApis.grid(row=0,column=1, padx = (0,0), pady=(0,10),sticky=tk.W)
                
         
 
@@ -378,8 +390,9 @@ class beaGuiControler:
        self.get_ctrl()                     #run the Controls that populate entries in view from model and load button functions.
        self.ctrl_quit = self.root.destroy
        self.sessionData = 0
+       self.global_session_ApiKeyPath() # this will start self.sessionApiKeyPath, the keys used in the session 
     ## contorl part of beaGuiView #################################################
-    def get_ctrl(self): 
+    def get_ctrl(self):   #these are SIDENAV Buttons - TODO: separate as sidenav
         #all buttons are flat when clicked 
         self.view.btn_database.config( command = self.btn_databaseFun  )
         self.view.btn_add     .config( command = self.btn_addFun       )      
@@ -389,6 +402,7 @@ class beaGuiControler:
         self.view.btn_help    .config( command = self.btn_helpFun      )    
         self.view.btn_settings.config( command = self.btn_settingsFun  )    
     
+
     def btn_databaseFun(self):
         self.clearUnpackFrameMainPackLeft()
         #self.view.frameTitle(self.view.frameMain_left, "Search Datasets")
@@ -429,65 +443,156 @@ class beaGuiControler:
         self.view.makeNotebook(self.view.frameMain_left,todos)
         print("helpFun     button clicke")     
 
-    def btn_settingsFun(self): 
+    def btn_settingsFun(self):   #THESE ARE SETTING WINDOW 
         self.clearUnpackFrameMainPackLeft()
         self.view.settingsPage()
-        self.view.updateApiKeysPathButton.configure(command=self.update_apiKeysPath)
-        self.view.newApiKeyNameButton.configure(command=self.update_apiKey)
+        self.view.currentApiKeysPath.config(text=self.sessionApiKeyPath)
+        self.view.sessionApiKeysPath.config(text=self.sessionApiKeyPath)
+        self.view.btn_updateApiKeysPath.configure(command=self.btnFun_settings_update_apiKeysPath)
+        self.view.btn_sessionUpdateApiKeysPath.configure(command=self.btnFun_settings_sessionUpdate_apiKeysPath)
+        self.view.newApiKeyNameButton.configure(command=self.btnFun_settings_update_apiKey)
+        self.view.btn_displayApis.configure(command=self.btnFun_settings_displayApis)
+        self.view.btn_deleteApiKey.configure(command=self.btnFun_settings_deleteApiKey)
         print("settingsFun     button clicke")  
-    
-    def update_apiKey(self):
-        #(1) get a path to the keys:
+
+    def btnFun_settings_sessionUpdate_apiKeysPath(self):
         try:
             #only write the path, no need to enter - in case want to try a temp path
-            ghostApiKeyPath = str(self.view.updateApiKeysPathEntry.get()) 
+            sessionApiKeyPath = str(self.view.updateSessionApiKeysPathEntry.get()) 
+        except:
+            sessionApiKeyPath = ""
+        
+        if sessionApiKeyPath == "":
+            self.sessionApiKeyPath = sessionApiKeyPath
+            messagebox.showinfo("beafullfetch", "The API Key path is empty")
+        else:
+            self.sessionApiKeyPath = sessionApiKeyPath
+            self.view.updateSessionApiKeysPathEntry.delete(0,'end')
+            messagebox.showinfo("beafullfetch", "Will use \n" + sessionApiKeyPath + "\n API Keys during this Session" )
+        
+        self.view.sessionApiKeysPath.config(text=self.sessionApiKeyPath)
+
+    def global_session_ApiKeyPath(self):
+        '''
+            This is called when the session begins - it sets the path to the API Keys
+        '''
+        if not hasattr(self, 'sessionApiKeyPath'):
+            try:
+                with open('beafullfetchpy/config/userSettings.json') as jsonFile:
+                     self.sessionApiKeyPath = (json.load(jsonFile))['ApiKeysPath']
+            except:
+                self.sessionApiKeyPath = ""
+                messagebox.showinfo("beafullfetch", "Could not find a Path to the API key - select one in Settings)")
+         
+
+
+    def settings_getGhostOrSessionApiKeyPath(self):  #get session or ghost api key path
+        '''
+          This is only used in table displaying apis - use ghost because 
+          might want to see data before using in session.
+          Will load a path in view.updateApiKeysPathEntry (just keyed in but not entered)
+          and use that - this is for the cases when want to test a new file of API keys
+          or when you cannot save the path in the package folder.
+        '''
+        #(1) get a path to the keys:  
+        try:
+            #only write the path, no need to enter - in case want to try a temp path
+            ghostApiKeyPath = str(self.view.updateSessionApiKeysPathEntry.get()) 
         except:
             ghostApiKeyPath = ""   
         
         if not ghostApiKeyPath == "":
             apiKeyPath  = ghostApiKeyPath
-        elif hasattr(self,'newApiKeyPath'):
-            apiKeyPath = self.newApiKeyPath
         else:
-            try:
-                with open('beafullfetchpy/config/userSettings.json') as jsonFile:
-                     tempDictPath = json.load(jsonFile)
-                     apiKeyPath = tempDictPath['ApiKeysPath']
-            except:
-                messagebox.showinfo("beafullfetch", "Could not find a Path to the API key - enter one above (no need to press the button)")
+            apiKeyPath = self.sessionApiKeyPath
+           
+        if apiKeyPath == "":
+           messagebox.showinfo("beafullfetch", "Could not find a session Path to the API key - enter on in settings")
         
+        return(apiKeyPath)
+    
+    def loadSessionApiJson(self,exceptCode = "js = {}"):
+        try:
+            with open( self.sessionApiKeyPath ) as jsonfile:
+                 js = json.load(jsonfile)
+            return(js)
+        except:
+            exec(exceptCode)
+            pass
+
+    def btnFun_settings_deleteApiKey(self):   
+        #get key to delete:
+        try:
+            ApiName = str(self.view.deleteApiKeyEntry.get())  
+            js = self.loadSessionApiJson()
+            js.pop(ApiName)
+            with open(self.sessionApiKeyPath,'w') as jsonFile:  #TODO: write as separate functions.
+                json.dump(js, jsonFile)
+            messagebox.showinfo("beafullfetch", "Deleted Key "+ApiName)
+        except:
+            messagebox.showinfo("beafullfetch", "Could not delete API from data")
+         
+        
+    
+    def btnFun_settings_displayApis(self):
+        # get api key file path, use the keyed in, but not entered option, by default.
+        apiKeyPath = self.settings_getGhostOrSessionApiKeyPath() 
+        try:
+            with open( apiKeyPath ) as jsonfile:
+                js = json.load(jsonfile)
+            dataFrame = pd.DataFrame.from_dict(js,orient='index')
+            htmls = dataFrame['address']
+            dataFrame.drop('address',axis=1,inplace = True) #TODO: transform API Name to a link to these htmls
+            dataFrame.index.name = "API Name"
+            dataFrame.reset_index(inplace = True)
+            self.view.btn_displayApis.configure(text='Reload API Keys')
+            self.view.lbl_displayApis.configure(text= 'data used: '+apiKeyPath)
+            self.view.apiTable = self.view.makeTable(self.view.frameMain_left_bottomFrame_right,dataFrame,dict(row=1,column=0,columnspan=3))
+        except:
+            messagebox.showinfo("beafullfetch", "Could not load table - perhaps it does not exist or path to it is wrong.  Create an API, for example.")
+        
+    def btnFun_settings_update_apiKey(self):
+        #(1) the api key path used is self.sessionApiKeyPath 
+
         #(2) get the new/updated key:
         userKeys = {}
         try:
-            newApiName = str(self.view.newApiNameEntry.get())
-            newApiKey  = str(self.view.newApiKeyEntry.get())
+            newApiName         = str(self.view.newApiNameEntry.get())  #this is the dict key
+            newApiKey          = str(self.view.newApiKeyEntry.get())
+            newApiAddress      = str(self.view.newApiAddressEntry.get())
+            newApiDescription  = str(self.view.newApiDescriptionEntry.get())
             if not newApiName == '' and not newApiKey == '':
-                userKeys[newApiName] = newApiKey
+                userKeys[newApiName] = dict(key=newApiKey,description=newApiDescription,address=newApiAddress)
             else:
                 messagebox.showinfo("beafullfetch", "Either API Name or Key is Empty.")
+                pass
         except:
             messagebox.showinfo("beafullfetch", "Could not read new API Name and Key.")
+            pass
         
         #(3) update the Api 
         try:
-            with open(apiKeyPath) as jsonFile:
+            with open(self.sessionApiKeyPath) as jsonFile:
                 tempAPIKeys = json.load(jsonFile)
         except:
             tempAPIKeys = {}
             messagebox.showinfo("beafullfetch", "Could not open file with API keys - will create one")
         
         tempAPIKeys.update(userKeys)
-        print(newApiName + newApiKey + apiKeyPath)
+        
+        # Save data to file
         try:
-            with open(apiKeyPath,'w') as jsonFile:
+            with open(self.sessionApiKeyPath,'w') as jsonFile:
                 json.dump(tempAPIKeys, jsonFile)
             messagebox.showinfo("beafullfetch", "API Key Created/Updated.")
             self.view.newApiNameEntry.delete(0,'end')
             self.view.newApiKeyEntry.delete(0,'end')
+            self.view.newApiAddressEntry.delete(0,'end')
+            self.view.newApiDescriptionEntry.delete(0,'end')
         except:
             messagebox.showinfo("beafullfetch", "Could not save new API key to file")
     
-    def update_apiKeysPath(self):
+    def btnFun_settings_update_apiKeysPath(self):
         #save in self, in case it's impossible to save the data to json,
         # can use the key path entered during a session.
         self.newApiKeyPath = str(self.view.updateApiKeysPathEntry.get())
@@ -503,6 +608,7 @@ class beaGuiControler:
             with open('beafullfetchpy/config/userSettings.json','w') as jsonFile:
                  json.dump(userConfig,jsonFile)
             self.view.currentApiKeysPath.configure(text=userConfig['ApiKeysPath'])
+            self.view.updateApiKeysPathEntry.delete(0,'end')
             messagebox.showinfo("beafullfetch", "API Keys Path updated.")
         except:
             messagebox.showinfo("beafullfetch", "Error, API Keys Path not updated but available during the session.")
