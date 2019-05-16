@@ -202,9 +202,9 @@ class beaGuiView(tk.Frame):
         self.frameMain_left_topFrame.pack(side = tk.TOP,fill=tk.X,pady=(0,0))
         self.frameMain_left_bottomFrame.pack(side = tk.TOP,fill=tk.X,pady=(50,0))
         self.frameMain_left_bottomFrame_left.pack(side = tk.LEFT,padx=(0,150))
-        self.frameMain_left_bottomFrame_right.pack(side = tk.LEFT)  #TODO: compare to right
+        self.frameMain_left_bottomFrame_right.pack(side = tk.LEFT)  
         
-        #content
+        #######  TOP FRAME #################################################
         self.frameTitle(self.frameMain_left_topFrame, "Settings",pack=False)
         userConfig = {}
         with open('beafullfetchpy/config/userSettings.json') as jsonFile:
@@ -218,7 +218,7 @@ class beaGuiView(tk.Frame):
             userConfig["ApiKeysPath"] = ""
         
         ttk.Label(master = self.frameMain_left_topFrame,text = 'API Keys File (JSON)' ).grid(
-            row=1,column=0,columnspan=2,pady=(50,0),sticky=tk.W)
+            row=1,column=0,columnspan=2,pady=(40,0),sticky=tk.W)
         ttk.Label(master = self.frameMain_left_topFrame,text = 'Current Path:'  ).grid(row=2,column=0,sticky="nsew")
         self.currentApiKeysPath = ttk.Label(master = self.frameMain_left_topFrame,text =  userConfig["ApiKeysPath"] )
         self.currentApiKeysPath.grid(row=2,column=1,columnspan=2,sticky=tk.W)
@@ -228,11 +228,10 @@ class beaGuiView(tk.Frame):
         self.updateApiKeysPathButton = ttk.Button(master = self.frameMain_left_topFrame,text = "Update" )
         self.updateApiKeysPathButton.grid(row=3,column=2,padx=(10,0))
         
-        #ttk.Label(master = self.frameMain_left_bottomFrame_left,text = "Display API Keys").grid(row=3,column=0)
-
-
+        
+        ####### BOTTOM FRAME ###############################################
         ttk.Label(master = self.frameMain_left_bottomFrame_left,text = "Enter (or update) API Key:"  ).grid(
-            row=4,column=0,columnspan=3,pady=(40,5),sticky=tk.W)
+            row=0,column=0,columnspan=3,pady=(0,5),sticky=tk.W)
         ttk.Label(master = self.frameMain_left_bottomFrame_left,text = 'API Name: '  ).grid(row=5,column=0,sticky=tk.W,pady=(0,5))
         self.newApiNameEntry  = tk.Entry(master = self.frameMain_left_bottomFrame_left )
         self.newApiNameEntry.grid(row=5,column=1)
@@ -252,7 +251,7 @@ class beaGuiView(tk.Frame):
         self.deleteApiKeyEntry  = tk.Entry(master = self.frameMain_left_bottomFrame_left )
         self.deleteApiKeyEntry.grid(row=10,column=1,pady=(40,0))
         self.deleteApiKeyButton = ttk.Button(master = self.frameMain_left_bottomFrame_left,text = "Enter" )
-        self.deleteApiKeyButton.grid(row=10,column=2,pady=(40,0))
+        self.deleteApiKeyButton.grid(row=10,column=2,pady=(40,0),padx=(10,0))
         #ttk.Label(master = self.frameMain_left,text = '\n \n Note:').grid(row=4,column=0)
         
         #dataFrame = pd.read_csv('contacts.csv')
@@ -260,11 +259,9 @@ class beaGuiView(tk.Frame):
             js = json.load(jsonfile)
         dataFrame = pd.DataFrame({'API Name': list(js.keys()), 'API Key': list(js.values()) })
         self.displayApisButton = ttk.Button(master = self.frameMain_left_bottomFrame_right,text = "Display API Keys" )
-        self.displayApisButton.grid(row=0,column=0,columnspan = 2, padx = (0,0), pady=(0,0),sticky=tk.W)
-        self.apiTable = self.makeTable(self.frameMain_left_bottomFrame_right,dataFrame,dict(row=0,column=0))
-        #print(dir(self))        
-        #self.tree.grid(row=5,column=4,rowspan=5,columnspan=3,padx=(100,0))
-        
+        self.displayApisButton.grid(row=0,column=0,columnspan = 2, padx = (0,0), pady=(60,10),sticky=tk.W)
+        self.apiTable = self.makeTable(self.frameMain_left_bottomFrame_right,dataFrame,dict(row=1,column=0))
+               
         
 
     def frameText(self,frameName,text,pack=True,cfg={}):
