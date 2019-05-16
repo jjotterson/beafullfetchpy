@@ -218,38 +218,37 @@ class beaGuiView(tk.Frame):
             userConfig["ApiKeysPath"] = ""
         
         ttk.Label(master = self.frameMain_left_topFrame,text = 'API Keys File (JSON)' ).grid(
-            row=1,column=0,columnspan=2,pady=(50,0))
-        ttk.Label(master = self.frameMain_left_topFrame,text = 'Current Path:'  ).grid(row=2,column=0)
-        self.currentApiKeysPath = ttk.Label(master = self.frameMain_left_topFrame,text = "    " + userConfig["ApiKeysPath"]  )
-        self.currentApiKeysPath.grid(row=2,column=1,columnspan=2)
-        ttk.Label(master = self.frameMain_left_topFrame,text = 'Update:'  ).grid(row=3,column=0)
+            row=1,column=0,columnspan=2,pady=(50,0),sticky=tk.W)
+        ttk.Label(master = self.frameMain_left_topFrame,text = 'Current Path:'  ).grid(row=2,column=0,sticky="nsew")
+        self.currentApiKeysPath = ttk.Label(master = self.frameMain_left_topFrame,text =  userConfig["ApiKeysPath"] )
+        self.currentApiKeysPath.grid(row=2,column=1,columnspan=2,sticky=tk.W)
+        ttk.Label(master = self.frameMain_left_topFrame,text = 'Update:'  ).grid(row=3,column=0,sticky=tk.W)
         self.updateApiKeysPathEntry  = tk.Entry(master = self.frameMain_left_topFrame )
         self.updateApiKeysPathEntry.grid(row=3,column=1)
         self.updateApiKeysPathButton = ttk.Button(master = self.frameMain_left_topFrame,text = "Update" )
         self.updateApiKeysPathButton.grid(row=3,column=2,padx=(10,0))
         
         #ttk.Label(master = self.frameMain_left_bottomFrame_left,text = "Display API Keys").grid(row=3,column=0)
-        self.displayApisButton = ttk.Button(master = self.frameMain_left_bottomFrame_left,text = "Display API Keys" )
-        self.displayApisButton.grid(row=0,column=0,columnspan = 2, padx = (0,0), pady=(0,0))
 
-        ttk.Label(master = self.frameMain_left_bottomFrame_left,text = "Enter (or update) API Key:", anchor = tk.W  ).grid(
-            row=4,column=0,columnspan=3,pady=(40,0))
-        ttk.Label(master = self.frameMain_left_bottomFrame_left,text = 'API Name: '  ).grid(row=5,column=0)
+
+        ttk.Label(master = self.frameMain_left_bottomFrame_left,text = "Enter (or update) API Key:"  ).grid(
+            row=4,column=0,columnspan=3,pady=(40,5),sticky=tk.W)
+        ttk.Label(master = self.frameMain_left_bottomFrame_left,text = 'API Name: '  ).grid(row=5,column=0,sticky=tk.W,pady=(0,5))
         self.newApiNameEntry  = tk.Entry(master = self.frameMain_left_bottomFrame_left )
         self.newApiNameEntry.grid(row=5,column=1)
-        ttk.Label(master = self.frameMain_left_bottomFrame_left,text = 'API Key: '  ).grid(row=6,column=0)
+        ttk.Label(master = self.frameMain_left_bottomFrame_left,text = 'API Key: '  ).grid(row=6,column=0,sticky=tk.W,pady=(0,5))
         self.newApiKeyEntry  = tk.Entry(master = self.frameMain_left_bottomFrame_left )
         self.newApiKeyEntry.grid(row=6,column=1)
-        ttk.Label(master = self.frameMain_left_bottomFrame_left,text = 'API Address: '  ).grid(row=7,column=0)
+        ttk.Label(master = self.frameMain_left_bottomFrame_left,text = 'API Address: '  ).grid(row=7,column=0,sticky=tk.W,pady=(0,5))
         self.newApiAddressEntry  = tk.Entry(master = self.frameMain_left_bottomFrame_left )
         self.newApiAddressEntry.grid(row=7,column=1)
-        ttk.Label(master = self.frameMain_left_bottomFrame_left,text = 'API Description: '  ).grid(row=8,column=0)
+        ttk.Label(master = self.frameMain_left_bottomFrame_left,text = 'API Description: '  ).grid(row=8,column=0,sticky=tk.W,pady=(0,5))
         self.newApiDescriptionEntry  = tk.Entry(master = self.frameMain_left_bottomFrame_left )
-        self.newApiDescriptionEntry.grid(row=8,column=1)
+        self.newApiDescriptionEntry.grid(row=8,column=1,sticky=tk.W)
         self.newApiKeyNameButton = ttk.Button(master = self.frameMain_left_bottomFrame_left,text = "Enter" )
         self.newApiKeyNameButton.grid(row=8,column=2,padx=(10,0))
         
-        ttk.Label(master = self.frameMain_left_bottomFrame_left,text = 'Delete API Key: '  ).grid(row=10,column=0,pady=(40,0))
+        ttk.Label(master = self.frameMain_left_bottomFrame_left,text = 'Delete API Key: '  ).grid(row=10,column=0,pady=(40,0),sticky=tk.W)
         self.deleteApiKeyEntry  = tk.Entry(master = self.frameMain_left_bottomFrame_left )
         self.deleteApiKeyEntry.grid(row=10,column=1,pady=(40,0))
         self.deleteApiKeyButton = ttk.Button(master = self.frameMain_left_bottomFrame_left,text = "Enter" )
@@ -260,6 +259,8 @@ class beaGuiView(tk.Frame):
         with open( userConfig["ApiKeysPath"] ) as jsonfile:
             js = json.load(jsonfile)
         dataFrame = pd.DataFrame({'API Name': list(js.keys()), 'API Key': list(js.values()) })
+        self.displayApisButton = ttk.Button(master = self.frameMain_left_bottomFrame_right,text = "Display API Keys" )
+        self.displayApisButton.grid(row=0,column=0,columnspan = 2, padx = (0,0), pady=(0,0),sticky=tk.W)
         self.apiTable = self.makeTable(self.frameMain_left_bottomFrame_right,dataFrame,dict(row=0,column=0))
         #print(dir(self))        
         #self.tree.grid(row=5,column=4,rowspan=5,columnspan=3,padx=(100,0))
@@ -287,8 +288,10 @@ class beaGuiView(tk.Frame):
           
         self.style.theme_create( "Noteb", parent="alt", 
             settings={
+                "Treeview" : {"configure":{"background":'#272822','fieldbackground':'#272822'}},
+                "Treeview.border" : {"configure":{'borderwidth' : 0}},
                 "TFrame"   : {"configure":{'background':'#272822','foreground':'white'}}, 
-                "TLabel"   : {"configure":{'background':'#272822','foreground':'white',}}, 
+                "TLabel"   : {"configure":{'background':'#272822','foreground':'white'}}, 
                 "TNotebook": {"configure": {"tabmargins": [0, 0, 0, 0], 'background':'#272822' ,'borderwidth':1} },
                 "TNotebook.Tab": {
                     "configure": {"padding": [4, 4], "background": '#272822','foreground':'white' ,'underline':0},
