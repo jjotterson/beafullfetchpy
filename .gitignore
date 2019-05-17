@@ -1,8 +1,10 @@
 #BEA API Key will be stored in config.py - gitignoring this file
+/tests/*
 beafullfetchpy/config.py
 beafullfetchpy/beaData/
 beafullfetchpy/beaDataClean/
 *.xlsx
+workspace.xml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

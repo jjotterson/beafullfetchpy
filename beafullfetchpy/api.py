@@ -1,5 +1,7 @@
 import pandas as pd
 import requests
+from beafullfetchpy import configFuns as cfgf
+
 
 try:
     from beafullfetchpy import config as userConfig
@@ -14,6 +16,64 @@ def basePayload(payload):
     payload = {x: userConfig.userOptions[x]
                for x in ['UserID', 'ResultFormat']}
     payload.update(settings)
+
+class data():
+    def __init__(self,userConfig = {}, userKeys = {}):     
+      self._dataAttributes = dict(NIPA = 'National Incomes and Products Account', Datasets = 'List of Datasets Available')
+      try:                                      #TODO: replace by getters and setters - use the set function in configFuns as a setter 
+          if userConfig == {}:
+              self._userConfig = cfgf.getConfig()   
+          if userKeys == {}:
+              self._userKeys   = cfgf.getKey()     
+      except:
+          print('could not load user BEA API Key and other key parameters')
+      self._query = {
+          'url'   : self._userKeys['address'],
+          'params':    dict(UserID=self._userKeys['key'],ResultFormat=self._userConfig["ResultFormat"])
+      }
+    
+    def dataSetList(self,verbose=False):
+        query = self._query
+        query['params'].update({'method':'GETDATASETLIST'})
+        
+        retrivedData = requests.get(**query)
+        
+        if query['params']['ResultFormat'] == 'JSON':
+            df_output =  pd.DataFrame( retrivedData.json()['BEAAPI']['Results']['Dataset'] )
+        else:
+            df_output =  pd.DataFrame( retrivedData.xml()['BEAAPI']['Results']['Dataset'] )  #TODO: check this works
+        
+        if verbose == False:
+            return(df_output)
+        else:
+            code = '''
+              import requests
+              import json    
+              
+              #(1) get user key - not advised but just write key and url in the file
+              #    file should contain: {{"BEA":{{"key":"YOUR KEY","address":"https://apps.bea.gov/api/data/"}}}}
+              
+              apiKeysFile = {}
+              with open(apiKeysFile) as jsonFile:
+                 apiInfo = json.load(jsonFile)
+                 url,key = apiInfo["BEA"]["key"], apiInfo["BEA"]["address"]       
+            '''.format(self._userConfig["ApiKeysPath"])
+            output = dict(dataFrame = df_output, request = retrivedData, code = code)  
+            return(output)  
+    
+    def help(self):
+        BEAAPIhelp = '''
+         Userguides:
+          https://apps.bea.gov/api/_pdf/bea_web_service_api_user_guide.pdf
+          https://www.bea.gov/tools/   or  https://apps.bea.gov/API/signup/index.cfm
+         
+          Basically, there are three types of meta: 
+            (1) GETDATASETLIST      top level, get the name of all tables.  
+            (2) GetParameterList    given a table, what parameters it needs to download (eg. NIPA)
+            (3) GetParameterValues  given a parameter of a table, which values you can choose. (eg. TableID)
+        '''   
+        print( BEAAPIhelp )
+        
 
 
 def NIPA(

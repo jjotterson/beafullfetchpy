@@ -1,4 +1,4 @@
 #__all__ = ['api']
 
-from beafullfetchpy.api import NIPA
+from beafullfetchpy.api import NIPA, data
 
