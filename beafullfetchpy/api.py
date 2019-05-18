@@ -18,8 +18,8 @@ def basePayload(payload):
     payload.update(settings)
 
 class data():
-    def __init__(self,userConfig = {}, userKeys = {}):     
-      self._dataAttributes = dict(NIPA = 'National Incomes and Products Account', Datasets = 'List of Datasets Available')
+    def __init__(self,userConfig = {}, userKeys = {}):
+      self.meta()       
       try:                                      #TODO: replace by getters and setters - use the set function in configFuns as a setter 
           if userConfig == {}:
               self._userConfig = cfgf.getConfig()   
@@ -32,7 +32,7 @@ class data():
           'params':    dict(UserID=self._userKeys['key'],ResultFormat=self._userConfig["ResultFormat"])
       }
     
-    def dataSetList(self,verbose=False):
+    def datasetlist(self,verbose=False):
         query = self._query
         query['params'].update({'method':'GETDATASETLIST'})
         
@@ -50,13 +50,13 @@ class data():
               import requests
               import json    
               
-              #(1) get user key - not advised but just write key and url in the file
+              #(1) get user API key (not advised but can just write key and url in the file)
               #    file should contain: {{"BEA":{{"key":"YOUR KEY","address":"https://apps.bea.gov/api/data/"}}}}
               
-              apiKeysFile = {}
+              apiKeysFile = "{}"
               with open(apiKeysFile) as jsonFile:
                  apiInfo = json.load(jsonFile)
-                 url,key = apiInfo["BEA"]["key"], apiInfo["BEA"]["address"]       
+                 url,key = apiInfo["BEA"]["address"], apiInfo["BEA"]["key"]       
             '''.format(self._userConfig["ApiKeysPath"])
             output = dict(dataFrame = df_output, request = retrivedData, code = code)  
             return(output)  
@@ -73,6 +73,21 @@ class data():
             (3) GetParameterValues  given a parameter of a table, which values you can choose. (eg. TableID)
         '''   
         print( BEAAPIhelp )
+    
+    def meta(self):  #TODO: write as setter
+        self.metadata = {
+            "name":"beafullfetchpy",
+            "apiClass":"data",
+            "displayName":"BEA",
+            "description":"Bureau of Economic Analysis (BEA)",
+            "datasets":[
+                {
+                 "displayName":"Datasets",
+                 "method":"datasetlist"   #NOTE run with getattr(data,'datasetlist')()
+                },
+             ],
+        }
+  
         
 
 
@@ -126,4 +141,7 @@ def NIPA(
 
 
 if __name__ == '__main__':
-    print(NIPA('T10101'))
+    
+    d = data()
+    print(d)
+    #print(NIPA('T10101'))

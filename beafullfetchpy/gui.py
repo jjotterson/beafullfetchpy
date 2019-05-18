@@ -8,6 +8,7 @@ import json
 import re
 import csv
 import pandas as pd
+#import importlib
 
 class beaGuiModel:  
     def __init__(self,exitProcess=0):  
@@ -94,6 +95,23 @@ def helpBEAAPI():
     return(helpBEAAPI)
 
 
+class frameDatabase():
+    def __init__(self):
+        self.getDataPackagesCfg()
+        self.loadDataPackages()   
+        self.getDataPackagesAPI()
+    
+    def getDataPackagesCfg(self):
+        with open('beafullfetchpy/config/programSettings.json') as jf:
+            self.dataPackagesCfg = (json.load(jf))['checkedinDataPackages']
+    
+    def loadDataPackages(self):
+        self.dataPackages = {x['name']: __import__(x['name']) for x in self.dataPackagesCfg}
+    
+    def getDataPackagesAPI(self):
+        self.dataPackagesApi = {x['displayName']:getattr(self.dataPackages[x['name']],x['apiClass'] ) 
+                                for x in self.dataPackagesCfg}
+        
 class beaGuiView(tk.Frame):
     '''
       Fixes the overall geometry of the app.  Note: writing based mainly in pack not grid since the 
