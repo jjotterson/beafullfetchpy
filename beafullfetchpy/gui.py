@@ -15,6 +15,7 @@ class beaGuiModel:
         self.getLicenses()
         self.getHelp()
         self.getHelpBEAAPI()
+        self.database = modelDataPackages() 
     def set_exitProcess(self, exitProcess=0):
         self.exitProcess = exitProcess
     def getLicenses(self):
@@ -95,23 +96,36 @@ def helpBEAAPI():
     return(helpBEAAPI)
 
 
-class frameDatabase():
+class modelDataPackages():
     def __init__(self):
-        self.getDataPackagesCfg()
-        self.loadDataPackages()   
-        self.getDataPackagesAPI()
+        self.loadedPackages  = {} #loaded packages go to variables - TODO: should load to user session as option before garbage collect prior to close the session
+        self.dataApi         = {} #package api function/class
+        self.getDataPackagesCfg()   
     
     def getDataPackagesCfg(self):
         with open('beafullfetchpy/config/programSettings.json') as jf:
             self.dataPackagesCfg = (json.load(jf))['checkedinDataPackages']
     
-    def loadDataPackages(self):
-        self.dataPackages = {x['name']: __import__(x['name']) for x in self.dataPackagesCfg}
-    
-    def getDataPackagesAPI(self):
-        self.dataPackagesApi = {x['displayName']:getattr(self.dataPackages[x['name']],x['apiClass'] ) 
-                                for x in self.dataPackagesCfg}
+    def getDataPackagesAPI(self,displayName):
+        '''
+         Import package and load the API.  Loads package by display name (eg BEA not beafullfetchpy) 
+         Loading all cases at once might be unecessary.
+        '''
+        try:
+            packageDictInfoList = list(filter(lambda x: x['displayName'] == displayName, 
+                 self.dataPackagesCfg ))  #TODO: fix this iter
+            if packageDictInfoList == []:
+                print("Could not find the package of " + displayName)
+            else:
+                packageDictInfo = packageDictInfoList[0] 
+        except:
+            print('Cound not search dataPacakgesCfg')
+            pass
+        self.loadedPackages[packageDictInfo['name']] = __import__(packageDictInfo['name']) 
+        dataAPIClass = getattr(self.loadedPackages[packageDictInfo['name']],packageDictInfo['apiClass'] )
+        self.dataPackagesApi.update({ packageDictInfo['displayName']: dataAPIClass() })
         
+
 class beaGuiView(tk.Frame):
     '''
       Fixes the overall geometry of the app.  Note: writing based mainly in pack not grid since the 
@@ -460,7 +474,7 @@ class beaGuiControler:
          }
         self.view.makeNotebook(self.view.frameMain_left,todos)
         print("helpFun     button clicke")     
-
+    ###################################################################################
     def btn_settingsFun(self):   #THESE ARE SETTING WINDOW 
         self.clearUnpackFrameMainPackLeft()
         self.view.settingsPage()
