@@ -224,7 +224,60 @@ class beaGuiView(tk.Frame):
         self.btn_code    .config(image=self.img_btn_code    ,width="50",height="24" )
         self.btn_help    .config(image=self.img_btn_help    ,width="50",height="24" )
         self.btn_settings.config(image=self.img_btn_settings,width="50",height="24" )
+    ######################################################################################
+    # DATABASE WINDOW
+    #  -  this is the hardest case - has to be as generic and inclusive as possible so that
+    #     so as all cases can be handled with the code here.
+    def databasePage(self,pageLayout,data):  #TODO: write as a class
+        '''
+           specify Layout, pass data
+        '''
+        
+        if pageLayout == "initialPage":
+            self.frameTitle(self.frameMain_left, "Databases", pack = False)  
+                
+            ttk.Label(master = self.frameMain_left,text = 'Select source' ).grid(row=1,column=0,sticky=tk.W)
+            
+            
+            self.combo_dbList = ttk.Combobox(self.frameMain_left, values=data)
+            self.btn_submit = ttk.Button(self.frameMain_left, text="Submit")
+                                   # command=self.display_color)
+            self.btn_clear = ttk.Button(self.frameMain_left, text="Clear") 
+             #command=self.display_color)
+            #self.dbPage.combo_dbList.bind("<<ComboboxSelected>>", self.display_color)
+            self.combo_dbList.grid(row=1,column=1, padx=10, pady=5)
+            self.btn_submit.grid(row=1,column=2,padx=10, pady=5)
+            self.btn_clear.grid(row=1,column=3,padx=10, pady=5)
     
+
+        
+        
+        #ttk.Label(master = self.frameMain_left_topFrame,text = 'Default Path:'  ).grid(row=2,column=0,sticky="nsew")
+        #self.currentApiKeysPath = ttk.Label(master = self.frameMain_left_topFrame,text =  "" ) #control updates this
+        #self.currentApiKeysPath.grid(row=2,column=1,columnspan=2,sticky=tk.W)
+        #ttk.Label(master = self.frameMain_left_topFrame,text = 'New Path:'  ).grid(row=3,column=0,sticky=tk.W)
+        #self.updateApiKeysPathEntry  = tk.Entry(master = self.frameMain_left_topFrame )
+        #self.updateApiKeysPathEntry.grid(row=3,column=1)
+        #self.btn_updateApiKeysPath = ttk.Button(master = self.frameMain_left_topFrame,text = "Update Database" )
+        #self.btn_updateApiKeysPath.grid(row=3,column=2,padx=(10,0))
+        #data = {
+        #           "Datasets": ["dataset"],
+        #           "NIPA": ["NIPA Tables"]
+        # }
+        #self.makeNotebook(self.frameMain_left,todos)
+    #def newselection(self, event):  #TODO: move to control
+    #    self.value_of_combo = self.box.get()
+    #    print(self.value_of_combo)
+    #
+    #def combo(self,frameName,box_values):
+    #    self.box_value = StringVar()
+    #    self.box = ttk.Combobox(frameName, textvariable=box_values)
+    #    self.box.bind("<<ComboboxSelected>>", self.newselection)  
+    # END OF DATABASE WINDOW
+    ######################################################################################
+    
+    ######################################################################################
+    # SETTINGS WINDOW
     def settingsPage(self):
         #geometry
         self.frameMain_left_topFrame           = ttk.Frame(master=self.frameMain_left)
@@ -250,7 +303,7 @@ class beaGuiView(tk.Frame):
             userConfig["ApiKeysPath"] = ""
         
         ttk.Label(master = self.frameMain_left_topFrame,text = 'API Keys File (JSON)' ).grid(
-            row=1,column=0,columnspan=2,pady=(40,0),sticky=tk.W)
+            row=1,column=0,columnspan=2,pady=(0,0),sticky=tk.W)
         ttk.Label(master = self.frameMain_left_topFrame,text = 'Default Path:'  ).grid(row=2,column=0,sticky="nsew")
         self.currentApiKeysPath = ttk.Label(master = self.frameMain_left_topFrame,text =  "" ) #control updates this
         self.currentApiKeysPath.grid(row=2,column=1,columnspan=2,sticky=tk.W)
@@ -305,8 +358,8 @@ class beaGuiView(tk.Frame):
         self.btn_displayApis.grid(row=0,column=0, padx = (0,0), pady=(0,10),sticky=tk.W)
         self.lbl_displayApis = ttk.Label(master= self.frameMain_left_bottomFrame_right, text = "")
         self.lbl_displayApis.grid(row=0,column=1, padx = (0,0), pady=(0,10),sticky=tk.W)
-               
-        
+    # END OF SETTINGS WINDOW           
+    #################################################################################################################    
 
     def frameText(self,frameName,text,pack=True,cfg={}):
         defaultCfg = dict(master=frameName,  width=550, height=10,background='#272822',fg="white") #NOTE: need same width as parent frame to allow fill x
@@ -320,9 +373,9 @@ class beaGuiView(tk.Frame):
     def frameTitle(self, frameName, title, pack = True):
         self.title = tk.Label(frameName, text=title,font=(self.fontsel, 20),  anchor=tk.W, justify=tk.LEFT, fg = 'white',background='#272822' )
         if pack :
-            self.title.pack(side=tk.TOP,fill=tk.X)
+            self.title.pack(side=tk.TOP,fill=tk.X, pady = (0,50))
         else:
-            self.title.grid(row=0,  column=0, sticky='e')
+            self.title.grid(row=0,  column=0,  pady = (0,50), sticky='e')
     
     def ttkStyles(self):
         self.style = ttk.Style(self)
@@ -434,36 +487,25 @@ class beaGuiControler:
         self.view.btn_help    .config( command = self.btn_helpFun      )    
         self.view.btn_settings.config( command = self.btn_settingsFun  )    
     
-
-    def btn_databaseFun(self):
-        self.clearUnpackFrameMainPackLeft()
-        #self.view.frameTitle(self.view.frameMain_left, "Search Datasets")
-        todos = {
-                   "Datasets": ["dataset"],
-                   "NIPA": ["NIPA Tables"]
-         }
-        self.view.makeNotebook(self.view.frameMain_left,todos)
-        print("database button clicked")
-
     def btn_addFun(self): 
         self.clearUnpackFrameMainPackLeft()
         print("addFun      button clicke")
-
+     
     def btn_downloadFun(self): 
         self.clearUnpackFrameMainPackLeft()
         self.view.frameTitle(self.view.frameMain_left, "Download Data")
         print("downloadFun button clicke")
-
+    
     def btn_loadFun(self): 
         self.clearUnpackFrameMainPackLeft()
         self.view.frameTitle(self.view.frameMain_left, "Load Data to Current Session")
         print("loadFun     button clicke")
-
+    
     def btn_codeFun(self): 
         self.clearUnpackFrameMainPackLeft()
         self.view.frameTitle(self.view.frameMain_left, "Code to Extract Data")
         print("codeFun     button clicke")
-
+    
     def btn_helpFun(self): 
         self.clearUnpackFrameMainPackLeft()
         todos = {
@@ -473,7 +515,27 @@ class beaGuiControler:
                   
          }
         self.view.makeNotebook(self.view.frameMain_left,todos)
-        print("helpFun     button clicke")     
+        print("helpFun     button clicke")    
+    
+    ###################################################################################
+    # DATABASE CONTROLS 
+    # if less than 8 (10?) databases, create notebooks, else create dropdown
+    def btn_databaseFun(self):
+        self.clearUnpackFrameMainPackLeft()
+        #self.view.frameTitle(self.view.frameMain_left, "Search Datasets")
+        colors = ("Purple", "Yellow", "Red", "Blue")
+        self.view.databasePage(pageLayout = "initialPage",data=colors)
+        self.view.btn_submit.configure(command = self.display_color )
+        self.view.btn_clear.configure(command = self.clear_color )
+        print("database button clicked")  
+
+    def display_color(self, *args):  
+           color = self.view.combo_dbList.get()
+           print("Your selection is", color)
+    
+    def clear_color(self):
+           self.view.combo_dbList.set("")
+    # END of DATABASE CONTROLS
     ###################################################################################
     def btn_settingsFun(self):   #THESE ARE SETTING WINDOW 
         self.clearUnpackFrameMainPackLeft()
@@ -680,8 +742,9 @@ class beaGuiControler:
         for child in self.view.frameMain.winfo_children():
             for subchild in child.winfo_children():
                 subchild.destroy()
+    ## END OF SETTINGS WINDOW ##################################################
     ## end of view control part ################################################    
-    ## controls :               ################################################
+    
 
 
 def openGui(sessionReturn = ""):
