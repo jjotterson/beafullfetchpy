@@ -236,22 +236,24 @@ class beaGuiView(tk.Frame):
         if pageLayout == "initialPage":
             self.frameTitle(self.frameMain_left, "Databases", pack = False)  
                 
-            ttk.Label(master = self.frameMain_left,text = 'Select source' ).grid(row=1,column=0,sticky=tk.W)
+            #ttk.Label(master = self.frameMain_left,text = 'Select source' ).grid(row=1,column=0,sticky=tk.W)
+            #
+            #
+            #self.combo_dbList = ttk.Combobox(self.frameMain_left, values=data)
+            #self.btn_submit = ttk.Button(self.frameMain_left, text="Submit")
+            #                       # command=self.display_color)
+            #self.btn_clear = ttk.Button(self.frameMain_left, text="Clear") 
+            # #command=self.display_color)
+            ##self.dbPage.combo_dbList.bind("<<ComboboxSelected>>", self.display_color)
+            #self.combo_dbList.grid(row=1,column=1, padx=10, pady=5)
+            #self.btn_submit.grid(row=1,column=2,padx=10, pady=5)
+            #self.btn_clear.grid(row=1,column=3,padx=10, pady=5)
             
-            
-            self.combo_dbList = ttk.Combobox(self.frameMain_left, values=data)
-            self.btn_submit = ttk.Button(self.frameMain_left, text="Submit")
-                                   # command=self.display_color)
-            self.btn_clear = ttk.Button(self.frameMain_left, text="Clear") 
-             #command=self.display_color)
-            #self.dbPage.combo_dbList.bind("<<ComboboxSelected>>", self.display_color)
-            self.combo_dbList.grid(row=1,column=1, padx=10, pady=5)
-            self.btn_submit.grid(row=1,column=2,padx=10, pady=5)
-            self.btn_clear.grid(row=1,column=3,padx=10, pady=5)
-    
+            #self.Template_combobox(self.frameMain_left,'Select Source',data,dict(row=2,column=0,sticky=tk.W,padx=(0,10)))
+            self.dbBase_combo_selectSource  = template_combobox(self.frameMain_left,'Select Source',data,dict(row=3,column=0,sticky=tk.W,padx=(0,10)))
+        
 
-        
-        
+
         #ttk.Label(master = self.frameMain_left_topFrame,text = 'Default Path:'  ).grid(row=2,column=0,sticky="nsew")
         #self.currentApiKeysPath = ttk.Label(master = self.frameMain_left_topFrame,text =  "" ) #control updates this
         #self.currentApiKeysPath.grid(row=2,column=1,columnspan=2,sticky=tk.W)
@@ -465,6 +467,29 @@ class beaGuiView(tk.Frame):
         tab_id = self.notebook.select()
         tab_name = self.notebook.tab(tab_id, "text")
         
+class template_combobox():
+    def __init__(self,frameName,labelText,dropdownData,geomParams,includeClearBtn = True,grid=True):
+        '''
+          geomParams = grid of pack paramaters.
+        '''
+        
+        self.label      = ttk.Label(   master = frameName, text = labelText )
+        self.combo      = ttk.Combobox(master = frameName, values=dropdownData)
+        self.btn_submit = ttk.Button(  master = frameName, text="Submit")  # command=self.display_color)                               
+        self.btn_clear  = ttk.Button(  master = frameName, text="Clear", command = self.clear)   # command=self.display_color)
+        #self.dbPage.combo_dbList.bind("<<ComboboxSelected>>", self.display_color)
+        
+        if grid == True:
+            self.label.grid(**geomParams)
+            geomParams['column'] += 1
+            self.combo.grid(**geomParams)
+            geomParams['column'] += 1
+            self.btn_submit.grid(**geomParams)
+            geomParams['column'] += 1
+            self.btn_clear.grid( **geomParams)
+    
+    def clear(self): #no need to move this to control, since always the same - just clean the entry
+           self.combo.set("")
 
 class beaGuiControler:
     def __init__(self):
@@ -525,16 +550,16 @@ class beaGuiControler:
         #self.view.frameTitle(self.view.frameMain_left, "Search Datasets")
         colors = ("Purple", "Yellow", "Red", "Blue")
         self.view.databasePage(pageLayout = "initialPage",data=colors)
-        self.view.btn_submit.configure(command = self.display_color )
-        self.view.btn_clear.configure(command = self.clear_color )
+        self.view.dbBase_combo_selectSource.btn_submit.configure(command = self.display_color )
+        #self.view.dbBase_combo_selectSource.btn_clear.configure(command = self.clear_color )
         print("database button clicked")  
 
     def display_color(self, *args):  
-           color = self.view.combo_dbList.get()
+           color = self.view.dbBase_combo_selectSource.combo.get()
            print("Your selection is", color)
     
     def clear_color(self):
-           self.view.combo_dbList.set("")
+           self.view.dbBase_combo_selectSource.combo.set("")
     # END of DATABASE CONTROLS
     ###################################################################################
     def btn_settingsFun(self):   #THESE ARE SETTING WINDOW 
