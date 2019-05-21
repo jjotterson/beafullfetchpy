@@ -15,7 +15,7 @@ class beaGuiModel:
         self.getLicenses()
         self.getHelp()
         self.getHelpBEAAPI()
-        self.database = modelDataPackages() 
+        self.databaseApi = modelDataPackages() 
     def set_exitProcess(self, exitProcess=0):
         self.exitProcess = exitProcess
     def getLicenses(self):
@@ -99,14 +99,14 @@ def helpBEAAPI():
 class modelDataPackages():
     def __init__(self):
         self.loadedPackages  = {} #loaded packages go to variables - TODO: should load to user session as option before garbage collect prior to close the session
-        self.dataApi         = {} #package api function/class
+        self.dbApi         = {} #package api function/class
         self.getDataPackagesCfg()   
     
     def getDataPackagesCfg(self):
         with open('beafullfetchpy/config/programSettings.json') as jf:
             self.dataPackagesCfg = (json.load(jf))['checkedinDataPackages']
     
-    def getDataPackagesAPI(self,displayName):
+    def getDataPackagesAPI(self,displayName): #TODO: can just pass the dataPcakgeCfg of specific package - see btn_databaseFun in the control window
         '''
          Import package and load the API.  Loads package by display name (eg BEA not beafullfetchpy) 
          Loading all cases at once might be unecessary.
@@ -123,7 +123,7 @@ class modelDataPackages():
             pass
         self.loadedPackages[packageDictInfo['name']] = __import__(packageDictInfo['name']) 
         dataAPIClass = getattr(self.loadedPackages[packageDictInfo['name']],packageDictInfo['apiClass'] )
-        self.dataPackagesApi.update({ packageDictInfo['displayName']: dataAPIClass() })
+        self.dbApi.update({ packageDictInfo['displayName']: dataAPIClass() })
         
 
 class beaGuiView(tk.Frame):
@@ -533,7 +533,7 @@ class beaGuiControler:
     # if less than 8 (10?) databases, create notebooks, else create dropdown
     def btn_databaseFun(self):
         self.clearUnpackFrameMainPackLeft()
-        dataSources = tuple(x['displayName'] for x in self.model.database.dataPackagesCfg )
+        dataSources = tuple(x['displayName'] for x in self.model.databaseApi.dataPackagesCfg )
         self.view.databasePage(pageLayout = "initialPage",data=dataSources)
         self.view.dbBase_combo_selectSource.btn_submit.configure(command = self.btn_selectSourceFn )
         print("database button clicked")  
@@ -542,14 +542,16 @@ class beaGuiControler:
            source = self.view.dbBase_combo_selectSource.combo.get()
            
            #get the right config:
-           getCfg = filter(lambda x: x['displayName'] == source, self.model.database.dataPackagesCfg)
+           getCfg = filter(lambda x: x['displayName'] == source, self.model.databaseApi.dataPackagesCfg)
            sourceInfo = next( getCfg , None )
            
            if sourceInfo == None:
                messagebox.showinfo("beafullfetch", "Cannot find source database information. Check it in the GUI app")
                pass    
-
+           
            dataSourceDB = {'sourceInfo':sourceInfo}
+           #load package API function:
+           self.model.databaseApi.getDataPackagesAPI(source)
 
            self.clearUnpackFrameMainPackLeft() #TODO: if many databases in the source, don't clean put anohtercombo
            self.view.databasePage(pageLayout = "selectedSource",data=dataSourceDB)
