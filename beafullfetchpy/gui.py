@@ -453,7 +453,7 @@ class beaGuiView(tk.Frame):
              key - name of the sheet
              array - a list of strings that will be logged
         '''
-        self.notebook = ttk.Notebook(frameName, width=750, height=900)
+        self.notebook = ttk.Notebook(frameName, width=1300, height=900)
         self.label = ttk.Label(self)
         for key, value in todos.items():
             frame = ttk.Frame(self.notebook)
@@ -470,6 +470,11 @@ class beaGuiView(tk.Frame):
         tab_id = self.notebook.select()
         tab_name = self.notebook.tab(tab_id, "text")
         print("Selected " + tab_name )
+
+class template_notebook():
+    def __init__(self,frameName,tabNames,dims = dict(width=750, height=900}):
+        pass
+
 
 class template_combobox():
     def __init__(self,frameName,labelText,dropdownData,geomParams,includeClearBtn = True,grid=True):
