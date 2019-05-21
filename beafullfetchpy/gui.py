@@ -103,27 +103,40 @@ class modelDataPackages():
         self.getDataPackagesCfg()   
     
     def getDataPackagesCfg(self):
+        '''
+          load the info of all data api packages that were checked in
+        '''
         with open('beafullfetchpy/config/programSettings.json') as jf:
             self.dataPackagesCfg = (json.load(jf))['checkedinDataPackages']
     
-    def getDataPackagesAPI(self,displayName): #TODO: can just pass the dataPcakgeCfg of specific package - see btn_databaseFun in the control window
+    def getEntryOfDataPackagesCfg(self,displayName):
+        '''
+          get the info of a specific data package api from a list of packages
+        '''
+        if self.dataPackagesCfg == {}:
+            print("Could not find the config of packages")
+            pass
+         
+        getCfg = filter(lambda x: x['displayName'] == displayName, 
+                   self.dataPackagesCfg)
+        
+        sourceInfo = next( getCfg , None )
+        
+        if sourceInfo == None:
+           print("Could not find config of package "+ displayName)
+        
+        return(sourceInfo)
+    
+    def loadDbApi(self,displayName): #TODO: can just pass the dataPcakgeCfg of specific package - see btn_databaseFun in the control window
         '''
          Import package and load the API.  Loads package by display name (eg BEA not beafullfetchpy) 
          Loading all cases at once might be unecessary.
         '''
-        try:
-            packageDictInfoList = list(filter(lambda x: x['displayName'] == displayName, 
-                 self.dataPackagesCfg ))  #TODO: fix this iter
-            if packageDictInfoList == []:
-                print("Could not find the package of " + displayName)
-            else:
-                packageDictInfo = packageDictInfoList[0] 
-        except:
-            print('Cound not search dataPacakgesCfg')
-            pass
+        packageDictInfo = self.getEntryOfDataPackagesCfg(displayName)
         self.loadedPackages[packageDictInfo['name']] = __import__(packageDictInfo['name']) 
         dataAPIClass = getattr(self.loadedPackages[packageDictInfo['name']],packageDictInfo['apiClass'] )
         self.dbApi.update({ packageDictInfo['displayName']: dataAPIClass() })
+    
         
 
 class beaGuiView(tk.Frame):
@@ -529,7 +542,7 @@ class beaGuiControler:
         print("helpFun     button clicke")    
     
     ###################################################################################
-    # DATABASE CONTROLS 
+    # DATABASE PAGE CONTROLS 
     # if less than 8 (10?) databases, create notebooks, else create dropdown
     def btn_databaseFun(self):
         self.clearUnpackFrameMainPackLeft()
@@ -539,24 +552,24 @@ class beaGuiControler:
         print("database button clicked")  
 
     def btn_selectSourceFn(self, *args):  
-           source = self.view.dbBase_combo_selectSource.combo.get()
+           displayName = self.view.dbBase_combo_selectSource.combo.get()
            
-           #get the right config:
-           getCfg = filter(lambda x: x['displayName'] == source, self.model.databaseApi.dataPackagesCfg)
-           sourceInfo = next( getCfg , None )
-           
+           #get config of selected data source:
+           sourceInfo = self.model.databaseApi.getEntryOfDataPackagesCfg(displayName)
            if sourceInfo == None:
                messagebox.showinfo("beafullfetch", "Cannot find source database information. Check it in the GUI app")
-               pass    
+               pass                   
            
            dataSourceDB = {'sourceInfo':sourceInfo}
            #load package API function:
-           self.model.databaseApi.getDataPackagesAPI(source)
-
+           print('Cuurent pppakcage')
+           self.model.databaseApi.loadDbApi(displayName)
+           print(self.model.databaseApi.dbApi)#.loadDbApi(displayName))
+           
            self.clearUnpackFrameMainPackLeft() #TODO: if many databases in the source, don't clean put anohtercombo
            self.view.databasePage(pageLayout = "selectedSource",data=dataSourceDB)
            
-           print("Your selection is", source)
+           print("Your selection is", displayName)
     
 
     # END of DATABASE CONTROLS
