@@ -15,7 +15,7 @@ class beaGuiModel:
         self.getLicenses()
         self.getHelp()
         self.getHelpBEAAPI()
-        self.databaseApi = modelDataPackages() 
+        self.dataPackages = modelDataPackages() 
     def set_exitProcess(self, exitProcess=0):
         self.exitProcess = exitProcess
     def getLicenses(self):
@@ -99,7 +99,7 @@ def helpBEAAPI():
 class modelDataPackages():
     def __init__(self):
         self.loadedPackages  = {} #loaded packages go to variables - TODO: should load to user session as option before garbage collect prior to close the session
-        self.dbApi         = {} #package api function/class
+        self.dbApi           = {} #package api function/class
         self.getDataPackagesCfg()   
     
     def getDataPackagesCfg(self):
@@ -251,8 +251,13 @@ class beaGuiView(tk.Frame):
             self.dbBase_combo_selectSource  = template_combobox(self.frameMain_left,'Select Source',data,dict(row=3,column=0,sticky=tk.W,padx=(0,10)))
         
         if pageLayout == 'selectedSource':
-             self.frameTitle(self.frameMain_left, data['sourceInfo']['displayName'], pack = False) 
+             #self.frameTitle(self.frameMain_left, data['metadata']['displayName'], pack = False) 
+             dbs_num    = len(data['metadata']['databases'])
 
+             if dbs_num < 13:
+                 dbs_names  = {x['displayName'] : "hi" for x in data['metadata']['databases'] }
+                 self.makeNotebook(self.frameMain_left,dbs_names)
+                 
         #ttk.Label(master = self.frameMain_left_topFrame,text = 'Default Path:'  ).grid(row=2,column=0,sticky="nsew")
         #self.currentApiKeysPath = ttk.Label(master = self.frameMain_left_topFrame,text =  "" ) #control updates this
         #self.currentApiKeysPath.grid(row=2,column=1,columnspan=2,sticky=tk.W)
@@ -448,7 +453,6 @@ class beaGuiView(tk.Frame):
              key - name of the sheet
              array - a list of strings that will be logged
         '''
-        print('hello')
         self.notebook = ttk.Notebook(frameName, width=750, height=900)
         self.label = ttk.Label(self)
         for key, value in todos.items():
@@ -460,12 +464,13 @@ class beaGuiView(tk.Frame):
         self.label.pack(anchor=tk.W)
         self.notebook.enable_traversal()
         self.notebook.bind("<<NotebookTabChanged>>", self.select_tab)
-        print("end notebook blok")
-
+       
+    
     def select_tab(self, event):
         tab_id = self.notebook.select()
         tab_name = self.notebook.tab(tab_id, "text")
-        
+        print("Selected " + tab_name )
+
 class template_combobox():
     def __init__(self,frameName,labelText,dropdownData,geomParams,includeClearBtn = True,grid=True):
         '''
@@ -516,16 +521,19 @@ class beaGuiControler:
         print("addFun      button clicke")
      
     def btn_downloadFun(self): 
+        #choose format: pickle, gzip, excel, R, SQL, Mongo, matlab and filename
         self.clearUnpackFrameMainPackLeft()
         self.view.frameTitle(self.view.frameMain_left, "Download Data")
         print("downloadFun button clicke")
     
     def btn_loadFun(self): 
+        #ask variable name
         self.clearUnpackFrameMainPackLeft()
         self.view.frameTitle(self.view.frameMain_left, "Load Data to Current Session")
         print("loadFun     button clicke")
     
     def btn_codeFun(self): 
+        #include also suggested tests
         self.clearUnpackFrameMainPackLeft()
         self.view.frameTitle(self.view.frameMain_left, "Code to Extract Data")
         print("codeFun     button clicke")
@@ -546,7 +554,7 @@ class beaGuiControler:
     # if less than 8 (10?) databases, create notebooks, else create dropdown
     def btn_databaseFun(self):
         self.clearUnpackFrameMainPackLeft()
-        dataSources = tuple(x['displayName'] for x in self.model.databaseApi.dataPackagesCfg )
+        dataSources = tuple(x['displayName'] for x in self.model.dataPackages.dataPackagesCfg )
         self.view.databasePage(pageLayout = "initialPage",data=dataSources)
         self.view.dbBase_combo_selectSource.btn_submit.configure(command = self.btn_selectSourceFn )
         print("database button clicked")  
@@ -554,20 +562,24 @@ class beaGuiControler:
     def btn_selectSourceFn(self, *args):  
            displayName = self.view.dbBase_combo_selectSource.combo.get()
            
-           #get config of selected data source:
-           sourceInfo = self.model.databaseApi.getEntryOfDataPackagesCfg(displayName)
+           #get config of selected data source - this is data that was checked in the gui app
+           sourceInfo = self.model.dataPackages.getEntryOfDataPackagesCfg(displayName)
            if sourceInfo == None:
                messagebox.showinfo("beafullfetch", "Cannot find source database information. Check it in the GUI app")
                pass                   
            
-           dataSourceDB = {'sourceInfo':sourceInfo}
            #load package API function:
-           print('Cuurent pppakcage')
-           self.model.databaseApi.loadDbApi(displayName)
-           print(self.model.databaseApi.dbApi)#.loadDbApi(displayName))
+           #TODO: is it possible to put a indicator that package is being loaded?
+           self.model.dataPackages.loadDbApi(displayName)
            
+           #data passed to view - will pass API function + data checked in the gui app
+           #print(self.model.dataPackages.dbApi[displayName].metadata)#.loadDbApi(displayName))
+           
+           modelDataToView    = {'guiCheckedInData':sourceInfo,'metadata':self.model.dataPackages.dbApi[displayName].metadata }
+           modelDataToControl = {'guiCheckedInData':sourceInfo,'dbApi':self.model.dataPackages.dbApi[displayName]}
+           #render new view
            self.clearUnpackFrameMainPackLeft() #TODO: if many databases in the source, don't clean put anohtercombo
-           self.view.databasePage(pageLayout = "selectedSource",data=dataSourceDB)
+           self.view.databasePage(pageLayout = "selectedSource",data=modelDataToView)
            
            print("Your selection is", displayName)
     
@@ -575,6 +587,7 @@ class beaGuiControler:
     # END of DATABASE CONTROLS
     ###################################################################################
     def btn_settingsFun(self):   #THESE ARE SETTING WINDOW 
+        #TODO: add sql and non-sql options
         self.clearUnpackFrameMainPackLeft()
         self.view.settingsPage()
         self.view.currentApiKeysPath.config(text=self.sessionApiKeyPath)

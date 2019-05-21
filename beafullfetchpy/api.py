@@ -77,13 +77,20 @@ class data():
     def meta(self):  #TODO: write as setter
         self.metadata = {
             "name":"beafullfetchpy",
+            "loadPackageAs" : "bff",
             "apiClass":"data",
             "displayName":"BEA",
             "description":"Bureau of Economic Analysis (BEA)",
-            "datasets":[
+            "databases":[
                 {
-                 "displayName":"Datasets",
-                 "method":"datasetlist"   #NOTE run with getattr(data,'datasetlist')()
+                 "displayName":"List of Datasets",
+                 "method"     :"datasetlist",   #NOTE run with getattr(data,'datasetlist')()
+                 "params"     :{},
+                },
+                {
+                 "displayName":"NIPA",
+                 "method"     :"NIPA",   #NOTE run with getattr(data,'datasetlist')()
+                 "params"     :{'Year':'X','Frequency':'Q'}, #Parameters and default options.
                 },
              ],
         }
