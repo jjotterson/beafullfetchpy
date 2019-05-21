@@ -1,0 +1,11 @@
+{
+    "checkedinDataPackages" : [
+        {
+            "name":"beafullfetchpy",
+            "apiClass":"data",
+            "displayName":"BEA",
+            "description":"Bureau of Economic Analysis (BEA)",
+            "metadata":"metadata"
+        }
+    ]
+}
