@@ -472,7 +472,7 @@ class beaGuiView(tk.Frame):
         print("Selected " + tab_name )
 
 class template_notebook():
-    def __init__(self,frameName,tabNames,dims = dict(width=750, height=900}):
+    def __init__(self,frameName,tabNames,dims = dict(width=750, height=900)):
         pass
 
 
