@@ -5,6 +5,8 @@ beafullfetchpy/beaData/
 beafullfetchpy/beaDataClean/
 *.xlsx
 workspace.xml
+/beafullfetchpy/.idea/*
+/beafullfetchpy/.idea/workspace.xml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
