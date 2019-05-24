@@ -71,6 +71,28 @@ class data():
             (1) GETDATASETLIST      top level, get the name of all tables.  
             (2) GetParameterList    given a table, what parameters it needs to download (eg. NIPA)
             (3) GetParameterValues  given a parameter of a table, which values you can choose. (eg. TableID)
+
+         Sample python code (getting the list of datasets):
+    
+            import requests 
+            payload = {
+                'UserID':  ENTER YOUR BEA API Key Here, 
+                'method': 'GETDATASETLIST',
+                'ResultFormat': "JSON"
+            }
+            beaDatasets = requests.get( 'https://apps.bea.gov/api/data/', params = payload )
+        
+         Licenses (always check with the data provider):
+            Data used is sourced from the Bureau of Economic Analysis 
+            As stated on the Bureau of Economic Analysis website: 
+            - Unless stated otherwise, information published on this site is in the public 
+               domain and may be used or reproduced without specific permission. 
+            - As a U.S. government agency, BEA does not endorse or recommend any 
+              commercial products or services.                                            
+            - Any reference or link to the BEA Web site must not contain information 
+              that suggests an endorsement or recommendation by BEA.                  
+            For more information, see: 
+             https://www.bea.gov/help/guidelines-for-citing-bea  
         '''   
         print( BEAAPIhelp )
     
