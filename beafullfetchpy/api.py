@@ -94,7 +94,7 @@ class data():
             For more information, see: 
              https://www.bea.gov/help/guidelines-for-citing-bea  
         '''   
-        print( BEAAPIhelp )
+        return( BEAAPIhelp )
     
     def meta(self):  #TODO: write as setter
         self.metadata = {
