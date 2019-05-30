@@ -1,13 +1,13 @@
 from setuptools import setup
 
-setup(name='beafullfetchpy',
+setup(name='datapungibea',
       version='0.1',
       description='Package BEA data - including NIPA vintage data',
-      url='https://github.com/jjotterson/beafullfetchpy',
+      url='https://github.com/jjotterson/datapungibea',
       author='James Otterson',
       author_email='jjotterson@gmail.com',
       license='MIT',
-      packages=['beafullfetchpy'],
+      packages=['datapungibea'],
       zip_safe=False)
 
 # open the folder in command line and type 

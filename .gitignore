@@ -1,12 +1,12 @@
 #BEA API Key will be stored in config.py - gitignoring this file
 /tests/*
-beafullfetchpy/config.py
-beafullfetchpy/beaData/
-beafullfetchpy/beaDataClean/
+datapungibea/config.py
+datapungibea/beaData/
+datapungibea/beaDataClean/
 *.xlsx
 workspace.xml
-/beafullfetchpy/.idea/*
-/beafullfetchpy/.idea/workspace.xml
+/datapungibea/.idea/*
+/datapungibea/.idea/workspace.xml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -112,12 +112,13 @@ venv.bak/
 
 # mypy
 .mypy_cache/
-beafullfetchpy/beaHist1500.py
-beafullfetchpy/beaHist2000.py
-beafullfetchpy/beaHist2500.py
-beafullfetchpy/beaHist3000.py
-beafullfetchpy/beaHist4000.py
-beafullfetchpy/beaHist4424.py
-beafullfetchpy/beaHist500.py
-beafullfetchpy/beaHist1000.py
-beafullfetchpy/beaHist1000.py
+datapungibea/beaHist1500.py
+datapungibea/beaHist2000.py
+datapungibea/beaHist2500.py
+datapungibea/beaHist3000.py
+datapungibea/beaHist4000.py
+datapungibea/beaHist4424.py
+datapungibea/beaHist500.py
+datapungibea/beaHist1000.py
+datapungibea/beaHist1000.py
+.idea/workspace.xml
