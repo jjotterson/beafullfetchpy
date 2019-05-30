@@ -1,10 +1,10 @@
 import pandas as pd
 import requests
-from beafullfetchpy import configFuns as cfgf
+from datapungibea import configFuns as cfgf
 
 
 try:
-    from beafullfetchpy import config as userConfig
+    from datapungibea import config as userConfig
 except:
     print(
         "Run userPreferences to save API Key and prefered format (XML vs JSON) to memory \n" +
