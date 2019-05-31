@@ -1,3 +1,12 @@
+'''
+datapungibea.utils
+~~~~~~~~~~~~~~~~~~
+
+This module provides utility functions that are used 
+within datapungibea and by the users when they want 
+to update internal configs.
+'''
+
 import json
 import pkg_resources
 
