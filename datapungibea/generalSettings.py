@@ -8,9 +8,14 @@
   individual methods used to get databases of the datasource
 '''
 
-class generalInformationAndSettings():
-    def __init__(self,userConfig={}):
+import datapungibea.utils as utils
+
+class generalSettings():
+    def __init__(self,sessionParameters={},userSettings={}):
         ''' 
+         __sessionParameters  - API key and the url (most used) of the datasource
+           entry should look like:
+           {'key': 'your key', 'description': 'BEA data', 'address': 'https://apps.bea.gov/api/data/'}
          __datasourceOverview - a quick description of the datasource and its license
          __packageMetadata - basic info on the package - to be used in a GUI or catalog of 
             methods that read data.  Also, "databases" will get automaticall updated with
@@ -22,6 +27,8 @@ class generalInformationAndSettings():
                  "params"     :{},              #No parameters in this case.
             }
         '''
+        #Load, for example, API Key and the (most used) path to the datasource
+        self.__getSessionParameters(sessionParameters,userSettings)
         
         self.__datasourceOverview = '''
          Userguides:
@@ -77,8 +84,16 @@ class generalInformationAndSettings():
          }              
            
     
-    def __getSessionParameters(self,config={}):
-        pass
+    def __getSessionParameters(self,sessionParameters={},userSettings={}):
+        if not sessionParameters == {}:
+           self.__getSessionParameters = sessionParameters
+           return 
+        
+        if not userSettings == {}:
+            self.__sessionParameters =  utils.getKey(userSettings=userSettings) 
+            return
+        
+        self.__sessionParameters = utils.getKey()
 
 
 

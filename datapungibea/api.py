@@ -1,6 +1,6 @@
 import pandas as pd
 import requests
-from datapungibea import configFuns as cfgf
+from datapungibea import utils as cfgf
 
 
 try:
