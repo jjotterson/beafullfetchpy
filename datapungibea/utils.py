@@ -10,20 +10,26 @@ to update internal configs.
 import json
 import pkg_resources
 
-def getKey(userSettings = {}):
+def getConnectionParameters(connectionParameters = {}, userSettings = {}):  
     '''
       :param userSettings: (optional) dictionary of  ``'ApiKeysPath': a path to json with API Keys`` and  ``'ApiKeyLabel': label (key) of JSON entry containing the key``
       If userSettings is an empty dictionary (default option), method will try to load it from saved userSettings.  
+
+      output, a dictionary with user key and datasource url
     '''
+
+    if not connectionParameters == {}:
+        return(connectionParameters)
+
     if userSettings == {}:
         userSettings = getUserSettings()
 
     try:
         with open(userSettings['ApiKeysPath']) as jsonFile:
-             key = (json.load(jsonFile))[userSettings['ApiKeyLabel']]
-        return(key)
+             connectionParameters = (json.load(jsonFile))[userSettings['ApiKeyLabel']]
+        return(connectionParameters)
     except:
-        print('Could not retrive key of ' + userSettings['ApiKeyLabel'] + ' from \n '+ userSettings['ApiKeysPath'])
+        print('Could not find dictionary key ' + userSettings['ApiKeyLabel'] + ' in \n '+ userSettings['ApiKeysPath'])
         return   
 
 def getResourcePath(relativePath, resource_package = __name__):
@@ -38,18 +44,21 @@ def getResourcePath(relativePath, resource_package = __name__):
     fullPath = pkg_resources.resource_filename(resource_package, relativePath)
     return(fullPath)
 
-def getUserSettings():
+def getUserSettings(userSettings = {}):
     '''
         loads the userSettings file.
     '''
+    if not userSettings == {}:
+        return(userSettings)
+
     userSettingsPath = getResourcePath('/config/userSettings.json','datapungibea') #TODO: remove package name.
     try:
         with open(userSettingsPath) as jsonFile:
-             config = json.load(jsonFile)
-        return(config)
+             userSettings = json.load(jsonFile)
+        return(userSettings)
     except:
-        print('datapungibea/utils.py: Could not open the userSettings: \n datapungibea/config/userSettings.json')
-        pass
+        print('.utils.py: Could not open the userSettings: \n ./config/userSettings.json \n returning empty dictionary')
+        return({})
 
 
 def setUserSettings(newPath):  #TODO: check if still valid

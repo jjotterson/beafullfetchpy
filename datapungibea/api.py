@@ -1,10 +1,11 @@
 import pandas as pd
 import requests
 from datapungibea import utils as cfgf
-
+from . import generalSettings 
+from . import drivers
 
 try:
-    from datapungibea import config as userConfig
+    from datapungibea import config as userSettings
 except:
     print(
         "Run userPreferences to save API Key and prefered format (XML vs JSON) to memory \n" +
@@ -13,159 +14,46 @@ except:
         #TODO: do this as class - so that can add this to object atribute, not define on brackground userOptions = {} but bff.userOptions ==
 
 def basePayload(payload):
-    payload = {x: userConfig.userOptions[x]
+    payload = {x: userSettings.userOptions[x]
                for x in ['UserID', 'ResultFormat']}
     payload.update(settings)
 
+
 class data():
-    def __init__(self,userConfig = {}, userKeys = {}):
-      self.meta()       
-      try:                                      #TODO: replace by getters and setters - use the set function in configFuns as a setter 
-          if userConfig == {}:
-              self._userConfig = cfgf.getConfig()   
-          if userKeys == {}:
-              self._userKeys   = cfgf.getKey()     
-      except:
-          print('could not load user BEA API Key and other key parameters')
-      self._query = {
-          'url'   : self._userKeys['address'],
-          'params':    dict(UserID=self._userKeys['key'],ResultFormat=self._userConfig["ResultFormat"])
-      }
-    
-    def datasetlist(self,verbose=False):
-        query = self._query
-        query['params'].update({'method':'GETDATASETLIST'})
-        
-        retrivedData = requests.get(**query)
-        
-        if query['params']['ResultFormat'] == 'JSON':
-            df_output =  pd.DataFrame( retrivedData.json()['BEAAPI']['Results']['Dataset'] )
-        else:
-            df_output =  pd.DataFrame( retrivedData.xml()['BEAAPI']['Results']['Dataset'] )  #TODO: check this works
-        
-        if verbose == False:
-            return(df_output)
-        else:
-            code = '''
-              import requests
-              import json    
-              
-              #(1) get user API key (not advised but can just write key and url in the file)
-              #    file should contain: {{"BEA":{{"key":"YOUR KEY","address":"https://apps.bea.gov/api/data/"}}}}
-              
-              apiKeysFile = "{}"
-              with open(apiKeysFile) as jsonFile:
-                 apiInfo = json.load(jsonFile)
-                 url,key = apiInfo["BEA"]["address"], apiInfo["BEA"]["key"]       
-            '''.format(self._userConfig["ApiKeysPath"])
-            output = dict(dataFrame = df_output, request = retrivedData, code = code)  
-            return(output)  
-    
-    def help(self):
-        BEAAPIhelp = '''
-         Userguides:
-          https://apps.bea.gov/api/_pdf/bea_web_service_api_user_guide.pdf
-          https://www.bea.gov/tools/   or  https://apps.bea.gov/API/signup/index.cfm
-         
-          Basically, there are three types of meta: 
-            (1) GETDATASETLIST      top level, get the name of all tables.  
-            (2) GetParameterList    given a table, what parameters it needs to download (eg. NIPA)
-            (3) GetParameterValues  given a parameter of a table, which values you can choose. (eg. TableID)
-
-         Sample python code (getting the list of datasets):
-    
-            import requests 
-            payload = {
-                'UserID':  ENTER YOUR BEA API Key Here, 
-                'method': 'GETDATASETLIST',
-                'ResultFormat': "JSON"
-            }
-            beaDatasets = requests.get( 'https://apps.bea.gov/api/data/', params = payload )
-        
-         Licenses (always check with the data provider):
-            Data used is sourced from the Bureau of Economic Analysis 
-            As stated on the Bureau of Economic Analysis website: 
-            - Unless stated otherwise, information published on this site is in the public 
-               domain and may be used or reproduced without specific permission. 
-            - As a U.S. government agency, BEA does not endorse or recommend any 
-              commercial products or services.                                            
-            - Any reference or link to the BEA Web site must not contain information 
-              that suggests an endorsement or recommendation by BEA.                  
-            For more information, see: 
-             https://www.bea.gov/help/guidelines-for-citing-bea  
-        '''   
-        return( BEAAPIhelp )
-    
-    def meta(self):  #TODO: write as setter
-        self.metadata = {
-            "name":"beafullfetchpy",
-            "loadPackageAs" : "bff",
-            "apiClass":"data",
-            "displayName":"BEA",
-            "description":"Bureau of Economic Analysis (BEA)",
-            "databases":[
-                {
-                 "displayName":"List of Datasets",
-                 "method"     :"datasetlist",   #NOTE run with getattr(data,'datasetlist')()
-                 "params"     :{},
-                },
-                {
-                 "displayName":"NIPA",
-                 "method"     :"NIPA",   #NOTE run with getattr(data,'datasetlist')()
-                 "params"     :{'Year':'X','Frequency':'Q'}, #Parameters and default options.
-                },
-             ],
-        }
+    def __init__(self,connectionParameters = {}, userSettings = {}):
+        '''
+          the purpose of this class is to provide an environment where the shared data needed to establish a connection is loaded
+          and to be a one stop shop of listing all available drivers.  
+          :param connectionParameters: a dictionary with at least 'key', and 'url'
+            {'key': 'your key', 'description': 'BEA data', 'url': 'https://apps.bea.gov/api/data/'} 
+          :param userSettings: settings saved in the packge pointing to a json containing the connection parameters 
+        '''
+        self.__connectInfo = generalSettings.getGeneralSettings(connectionParameters = connectionParameters, userSettings = userSettings ) #TODO: inherit this, all drivers as well
+          
   
-        
 
 
-def NIPA(
-    tableName,
-    payload={'method': 'GETDATA', 'DATABASENAME': 'NIPA', 'datasetname': 'NIPA', 'Year': 'X', 'Frequency': 'Q', 'ParameterName': 'TableID'},
-    outputFormat="tablePretty",
-    beaHttp='https://apps.bea.gov/api/data/',
-    tryFrequencies=False
-   ):
-    '''
-      User only need to specify the NIPA tableName, other parameters are defined by default.  Year (set to X) and Frequency (set to Q)
-      can be redefined with payload = {Year = 1990, Frequency = 'A'}, for example.
-      
-      payload - will override the default
-      
-      outputFormat - table, tablePretty will return tables (the latter separates the metadata and pivots the table to index x time).
-                     Else, returns the JSON, XML.
-      
-      beaHttp - the addess of the BEA API
-    '''
-    # TODO: put the payload ={} all data in lowercase, else may repeat the load (say frequency=A and Frquency = Q will load A and Q)
-    # load user preferences defined in userConfig, use suggested parameters, override w fun entry
-    payloadValues = {x: userConfig.userOptions[x] for x in ['UserID', 'ResultFormat']}
-    payloadValues.update({'TABLENAME': tableName})
-    payloadValues.update(payload)
-    
-    # TODO: try loading different frenquencies if no return
-    #
-    nipa = requests.get(beaHttp, params=payloadValues)
-    
-    # output format
-    if outputFormat == "table":
-        # TODO: check if xml or json
-        return(pd.DataFrame(nipa.json()['BEAAPI']['Results']['Data']))
-    elif outputFormat == "tablePretty":
-        table = pd.DataFrame(nipa.json()['BEAAPI']['Results']['Data'])
-        table['LineNumber'] = pd.to_numeric(table['LineNumber'])
-        table['DataValue'] = pd.to_numeric(table['DataValue'])
-        
-        meta = table.drop(['DataValue', 'TimePeriod'], axis=1).drop_duplicates()
-        meta = meta.set_index(['LineNumber', 'SeriesCode', 'LineDescription']).reset_index()
-        
-        table = table[['LineNumber', 'SeriesCode', 'LineDescription', 'DataValue', 'TimePeriod']]
-        table = pd.pivot_table(table, index=['LineNumber', 'SeriesCode', 'LineDescription'], columns='TimePeriod', values='DataValue', aggfunc='first')
-        
-        return({'metadata': meta, 'table': table})
-    else:
-        return(nipa)
+class Delegator(object):
+    def __getattr__(self, called_method):
+        def __raise_standard_exception():
+            raise AttributeError("'%s' object has no attribute '%s'" % (self.__class__.__name__, called_method))
+
+    def wrapper(*args, **kwargs):
+        delegation_config = getattr(self, 'DELEGATED_METHODS', None)
+        if not isinstance(delegation_config, dict):
+            __raise_standard_exception()
+ 
+        for delegate_object_str, delegated_methods in delegation_config.items():
+            if called_method in delegated_methods:
+                break
+        else:
+            __raise_standard_error()
+
+        delegate_object = getattr(self, delegate_object_str, None)
+
+        return getattr(delegate_object, called_method)(*args, **kwargs)
+
+    return wrapper
 
 
 

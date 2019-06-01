@@ -1,23 +1,22 @@
 '''
-  datapungi.generalSettings
-  ~~~~~~~~~~~~~~~~~~
-
-  General information on the data source (with disclaimer for accuracy), and 
-  general information on the package itself - this is to be passed to 
-  a GUI.  Also, this gets updated to include information on the 
-  individual methods used to get databases of the datasource
+  .generalSettings
+  ~~~~~~~~~~~~~~~~~
+  Loads general information: metadata of the datasource, metadata of the package's 
+  database drives (methods connecting to the databases of the datasource), 
+  and the datasource url and user api key.
 '''
 
-import datapungibea.utils as utils
+from . import utils
 
-class generalSettings():
-    def __init__(self,sessionParameters={},userSettings={}):
+class getGeneralSettings(): #TODO: write as a mixin
+    def __init__(self,connectionParameters={},userSettings={}):
         ''' 
-         __sessionParameters  - API key and the url (most used) of the datasource
+         sessionParameters  - API key and the url (most used) of the datasource
            entry should look like:
            {'key': 'your key', 'description': 'BEA data', 'address': 'https://apps.bea.gov/api/data/'}
-         __datasourceOverview - a quick description of the datasource and its license
-         __packageMetadata - basic info on the package - to be used in a GUI or catalog of 
+         userSettings - containg things like the path to api keys, preferred output format (json vs xml)
+         datasourceOverview - a quick description of the datasource and its license
+         packageMetadata - basic info on the package - to be used in a GUI or catalog of 
             methods that read data.  Also, "databases" will get automaticall updated with
             info on the methods that get specific dataset from the datasource.  A typical 
             entry should look like:
@@ -27,10 +26,36 @@ class generalSettings():
                  "params"     :{},              #No parameters in this case.
             }
         '''
-        #Load, for example, API Key and the (most used) path to the datasource
-        self.__getSessionParameters(sessionParameters,userSettings)
         
-        self.__datasourceOverview = '''
+        #Load, for example, API Key and the (most used) path to the datasource
+        self.userSettings         = utils.getUserSettings(userSettings=userSettings)
+        self.connectionParameters = utils.getConnectionParameters(connectionParameters,userSettings)
+        self.baseRequest          = getBaseRequest(self.connectionParameters,self.userSettings)
+        self.datasourceOverview   = getDatasourceOverview()
+        self.packageMetadata      = getPackageMetadata()
+               
+            
+def getBaseRequest(connectionParameters={},userSettings={}):
+    '''
+      translate the connection parameters, a flat dictionary, to the format used by 
+      requests (or other connector), also, translate names to ones used by the datasource.        
+    '''   
+     if userSettings == {}:
+         userSettings = dict(ResultFormat = 'JSON')
+         print("result format was set to JSON since none could be found or was passed as a 'ResultFormat' in userSettings")
+     
+     output = { #this is, for example, the base of a requests' request - the drivers add to this.
+        'url' : connectionParameters['url'],
+        'params' :{
+          'UserID' : connectionParameters['key'],
+          'ResultFormat': userSettings["ResultFormat"]
+        }
+     }
+     
+     return(output)
+
+def getDatasourceOverview():
+    output = '''
          Userguides:
           https://apps.bea.gov/api/_pdf/bea_web_service_api_user_guide.pdf
           https://www.bea.gov/tools/   or  https://apps.bea.gov/API/signup/index.cfm
@@ -62,40 +87,31 @@ class generalSettings():
             For more information, see: 
              https://www.bea.gov/help/guidelines-for-citing-bea  
         '''   
-           
-        self.__packageMetadata = {
-            "name":             "datapungibea",
-            "loadPackageAs" :   "dpbea",
-            "apiClass":         "data",
-            "displayName":      "BEA",
-            "description":      "Acess data from Bureau of Economic Analysis (BEA)",
-            "databases":        [
-                {
-                 "displayName":"List of Datasets",
-                 "method"     :"datasetlist",   #NOTE run with getattr(data,'datasetlist')()
-                 "params"     :{},
-                },
-                {
-                 "displayName":"NIPA",
-                 "method"     :"NIPA",   #NOTE run with getattr(data,'datasetlist')()
-                 "params"     :{'Year':'X','Frequency':'Q'}, #Parameters and default options.
-                },
-                ],
-         }              
-           
     
-    def __getSessionParameters(self,sessionParameters={},userSettings={}):
-        if not sessionParameters == {}:
-           self.__getSessionParameters = sessionParameters
-           return 
-        
-        if not userSettings == {}:
-            self.__sessionParameters =  utils.getKey(userSettings=userSettings) 
-            return
-        
-        self.__sessionParameters = utils.getKey()
+    return(output)
 
-
+def getPackageMetadata():
+    output = {
+        "name":             "datapungibea",
+        "loadPackageAs" :   "dpbea",
+        "apiClass":         "data",
+        "displayName":      "BEA",
+        "description":      "Acess data from Bureau of Economic Analysis (BEA)",
+        "databases":        [
+            {
+             "displayName":"List of Datasets",
+             "method"     :"datasetlist",   #NOTE run with getattr(data,'datasetlist')()
+             "params"     :{},
+            },
+            {
+             "displayName":"NIPA",
+             "method"     :"NIPA",   #NOTE run with getattr(data,'datasetlist')()
+             "params"     :{'Year':'X','Frequency':'Q'}, #Parameters and default options.
+            },
+            ],
+     }  
+    
+    return(output)
 
 
 
